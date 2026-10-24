@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-24（P2 完成时）
+> 最后更新：2026-10-24（P3 完成时）
 
 ## 1. 阶段状态
 
@@ -12,8 +12,8 @@
 | P0 基线 | ✅ 完成 | `5da4e42c` | 产出 `docs/BASELINE.md`、`docs/FOLLOWUPS.md` |
 | P1 监控名称 | ✅ 完成 | `db5fc40c` | 45 文件（含 34 个 `.po`） |
 | P2 900ms 计丢包 + 阈值 | ✅ 完成 | `28a05f0f` | Agent 归一化 + 前端阈值设置 |
-| **P3 卡片上下行** | ⬜ **下一步** | — | 4 处小改，无迁移 |
-| P4 监控卡片视图 | ⬜ 待开始 | — | 前端大头，拆 5 子步 |
+| P3 卡片上下行 | ✅ 完成 | `80197c5e` | `Info` 加 `bu/bd`（cbor 28/29），卡片 ↑↓ 分开显示 |
+| P4 监控卡片视图 | ⬜ **下一步** | — | 前端大头，拆 5 子步 |
 | P5 计费数据模型 | ⬜ 待开始 | — | 2 个新集合 |
 | P6 计费前端 | ⬜ | — | — |
 | P7 到期提醒 | ⬜ | — | — |
@@ -47,6 +47,8 @@ git status --short            # 应无输出
 | `DEFAULT_MONITOR_THRESHOLDS` | 同上 | `{ warnMs: 150, critMs: 400 }` |
 | `lossThresholdUs()` / `classifyProbe()` | `agent/network_monitor_thresholds.go` | Agent 侧丢包归一化 |
 | `network_monitors.name` | 迁移 `1792847604` | 已在 `NETWORK_MONITOR_FIELDS`、`copyMonitorToNewRecord`、表单、批量 CSV 中打通 |
+| `system.Info.BandwidthUp/Down`（`bu`/`bd`） | `internal/entities/system/system.go` | 分向上/下行 bytes/s；旧 Agent 不上报，零值即"未知" |
+| `getBandwidthParts(info)` | `site/src/components/systems-table/systems-table-columns.tsx` | 返回 `{up, down, combined}`；`combined` 为 true 时用合并值 `bb` 单值渲染 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
 ```ts
@@ -61,6 +63,9 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 4. **阈值设置 UI 已实现**（计划 P2 只要求"读用户设置"，未明确提出 UI）：`routes/settings/general.tsx` 的「Monitor thresholds」小节。
 5. **批量 CSV 增加可选第 6 列 `name`**（`target,protocol,port,interval,server,name`），5 列旧格式仍兼容；含逗号的名称会解析错位，已记入 `FOLLOWUPS.md`。
 6. **`getMonitorLevel` 把 `null` 和负数都判为 `loss`**。注意区分：`empty`（无探测样本）由 P4 的块聚合自行判断，**不能**复用 `getMonitorLevel` 的这个分支，否则 5 分钟探测的监控会显示大面积丢包。
+7. **P3 的 `bu/bd` 用 `omitzero`**（PRD §7.1 原写 `omitempty`），与 `Info` 里 `Battery` / `SystemdLogs` 一致；JSON 与 CBOR 行为统一，零值不上报。cbor 28/29 已核实空闲（`Info` 占用 0–27，其中 19 是 LoadAvg，15–17 为废弃不复用区）。
+8. **P3 的 `getBandwidthParts` 放在 `systems-table-columns.tsx` 顶部**（计划允许放 `lib/utils.ts`）：只服务 net 列且需要 `SystemInfo` 类型。**未加**计划里标为可选的 `↕` 合并图标，旧 Agent 视觉与 v0.21.1 完全一致。
+9. **P3 的 grid 两行渲染直接用已有的 `viewMode` 参数**（`SystemsTableColumns(viewMode)` 在 P4 之前就已存在），无需新增状态；`accessorFn` 仍取 `info.bb`，所以 table/grid 两种视图排序结果一致。
 
 ## 5. 验证命令（Windows 实测可用）
 
