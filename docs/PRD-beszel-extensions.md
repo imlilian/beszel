@@ -324,9 +324,9 @@ for each billing in system_billing where billingType=paid && cycle!=permanent &&
         continue
     系统名 = systems.name
     金额   = format(price, currency)
-    for each user in systems.users:
-        SendAlert({
-            UserID: user,
+	for each alert in alerts where alert.system = system && alert.name = "BillingExpiry":   # 按用户开关
+		SendAlert({
+			UserID: alert.user,
             SystemID: system,
             Title: "机器即将到期：{系统名}",
             Message: "{系统名}（{金额}/{周期}）将于 {日期} 到期，剩余 {N} 天。",
@@ -340,8 +340,8 @@ for each billing in system_billing where billingType=paid && cycle!=permanent &&
 
 1. **档位单调推进**：`remindLevel` 记录“已提醒到的最紧急档位”。因为 `level` 数值越小越紧急（7 → 3 → 1 → -1），用 `level >= remindLevel` 判断“已经提醒过这个档或更宽松的档”。续费/改期后（`expiresAt` 变大导致 `level` 回到 7 档之外）需要**重置** `remindLevel=0`，靠 `expiresAt` 变化检测（在 `system_billing` 的 update hook 里：`expiresAt:changed` → `remindLevel=0`）。
 2. **不是每日轰炸**：同一档位只发一次。若 `notifyDaysBefore=7`，则第 7 天发一次、第 3 天一次、第 1 天一次、到期当天一次，共 4 次。
-3. **收件人 = 系统成员**：与 Beszel 现有“告警按 user+system 归属”一致。`SendAlert` 内部会再次校验 `userHasSystem` 与免打扰时段，因此不需要在 Cron 里重复处理 `quiet_hours`（免打扰命中会静默丢弃；对“到期提醒”这种低频通知可接受，若要“免打扰也必达”需在 `SendAlert` 增加 `IgnoreQuietHours` 开关 —— 列为开放问题 Q3）。
-4. **不用 `alerts` 集合**：`alerts.name` 是固定 select 枚举，且语义是“阈值触发型告警（有 triggered 状态机）”。到期提醒是“日期型、一次性、无恢复概念”，塞进去会产生无意义的 `triggered=true` 常驻记录。**直接调 `SendAlert` 复用通知渠道即可**（`SendAlert` 与 alerts 记录完全解耦，见 `alerts.go:214`）。
+3. **收件人 = 打开了 `BillingExpiry` 告警的系统成员**：与 Beszel 现有“告警按 user+system 归属”一致；每个用户在系统卡片的「警报」面板自行开启（与「证书到期」同一套 UI）。`SendAlert` 内部仍会校验 `userHasSystem` 与免打扰时段，Cron 不需要重复处理 `quiet_hours`（若要“免打扰也必达”，在 `SendAlert` 加 `IgnoreQuietHours` —— 开放问题 Q3）。
+4. **用 `alerts` 集合做按用户开关（2026-10-25 修订，取代原“不用 alerts 集合”）**：新增告警类型 `BillingExpiry`，`alerts.name` 是 select 枚举，需要一条迁移追加取值（照 `1791926360_network_monitor_cert_alert.go` 先例），前端在 `lib/alerts.ts::alertInfo` 加一项纯开关。Cron 只给“该 user+system 存在 `BillingExpiry` 记录”的人发，不再群发 `systems.users`。该记录只当开关用，不参与 `triggered` 状态机（到期是日期型、无恢复概念）。`SendAlert` 本身仍与 alerts 记录解耦。
 5. **改期/续费**：用户在 `BillingDialog` 里把 `expiresAt` 往后改 → hook 重置 `remindLevel=0` → 下一轮 Cron 重新走档位。
 
 ### 4.6 边界与异常

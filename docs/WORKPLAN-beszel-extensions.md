@@ -1117,13 +1117,34 @@ stage-6b: add billing dialog and card summary
 
 ### 目标
 
-每天一次扫描，命中档位发通知，带去重。
+每天一次扫描，命中档位发通知，带去重。**通知的开关复用现有「警报」系统**：在系统卡片的「警报」面板新增一个 `BillingExpiry` 开关（每个用户可按系统开启），Cron 只给打开了该开关的用户发送——与「证书到期」完全同一套机制，不再"直接给系统全部用户群发"。
 
 ### 依赖
 
 P6（能配置才有意义；严格说 P5 就够，但 P6 之后才好手测）
 
 ### 改动清单
+
+#### 0. 新增告警类型 `BillingExpiry`（接入现有「警报」面板）
+
+这是本阶段的核心设计变更：**不再新增 `system_billing.expiryAlerts` 布尔字段，也不群发**，而是复用站点已有的按用户/按系统的告警开关。
+
+- **迁移**：照抄 `internal/migrations/1791926360_network_monitor_cert_alert.go`，把 `BillingExpiry` 追加到 `alerts.name` 的 `SelectField.Values`（下迁移里删除）。无需改 `system_billing`。
+- **前端** `internal/site/src/lib/alerts.ts` 的 `alertInfo` 增加一项（纯开关，无阈值滑块、无持续时长，和 `Status`/`SystemdFailed` 一样）：
+  ```ts
+  BillingExpiry: {
+    name: () => t`Billing Expiration`,
+    unit: "",
+    icon: WalletIcon,
+    desc: () => t`Triggers when a paid system nears its expiry date`,
+    // 纯开关：阈值在计费对话框的「提前 N 天」里，面板里只负责"要不要收"
+    noDuration: true,
+    noThreshold: true,
+  },
+  ```
+  `noThreshold && noDuration` ⇒ `hasControls=false`，渲染成只有一个 Switch（与截图里的「证书到期」同一行样式）。
+- **阈值来源**：沿用 `system_billing.notifyDaysBefore`（P6 表单里的「提前 N 天」），不在警报面板重复设置。
+  > 备选方案：像 `NetworkMonitorCert` 一样把天数塞进 `alerts.value`。但那会和 P6 对话框的 `notifyDaysBefore` 形成两个真相，先不采用；若以后想去掉 `notifyDaysBefore` 再切。
 
 #### 1. `internal/hub/billing/billing_reminders.go`（新建）
 
@@ -1144,9 +1165,14 @@ func (bm *Manager) CheckExpiryReminders() {
 		system, err := bm.app.FindRecordById("systems", cfg.SystemId)
 		...
 		title, message := buildExpiryMessage(system.GetString("name"), cfg, daysLeft)
-		for _, userId := range system.GetStringSlice("users") {
+		// 只发给打开「BillingExpiration」告警的用户（每个 user+system 一条 alerts 记录）
+		subs, err := bm.app.FindAllRecords("alerts", dbx.HashExp{"system": cfg.SystemId, "name": "BillingExpiry"})
+		if err != nil {
+			continue
+		}
+		for _, a := range subs {
 			_ = bm.alerts.SendAlert(alerts.AlertMessageData{
-				UserID: userId, SystemID: cfg.SystemId,
+				UserID: a.GetString("user"), SystemID: cfg.SystemId,
 				Title: title, Message: message,
 				Link: bm.hubUrl() + "/system/" + cfg.SystemId, LinkText: "View system",
 			})
@@ -1162,6 +1188,7 @@ func (bm *Manager) CheckExpiryReminders() {
 - **先发通知再更新 `remindLevel`**，还是反过来？→ **先更新再发**更安全（避免发送成功但保存失败导致重复轰炸）；但会导致“发失败也标记已发”。个人使用选**先更新**，并在日志里记录失败。
 - 一天只跑一次，且 `level != 0 && level < remindLevel` 才发 → 天然幂等（同一天重复执行不会重发，因为 `remindLevel` 已推进）。
 - **不要**在循环里开事务（一次 Save 足够，个人规模）。
+- **按用户开关、按记录去重**：开关是每个 `user+system` 的 `alerts` 记录；去重状态 `remindLevel` 仍在 `system_billing`（全局）。单用户系统完全正确；多用户时"某用户后开启 BillingExpiry"可能漏掉已推进的档位 —— 个人部署可接受，记为已知限制。若要严格按用户去重，需给 `alerts` 的 `state` JSON 记录每个用户已提醒到的档位（参考 `NetworkMonitorCert` 的 `state` 用法）。
 
 #### 2. 注册 Cron `internal/hub/hub.go::registerCronJobs`
 

@@ -2065,8 +2065,8 @@ msgid "Relationships"
 msgstr "关系"
 
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Reminders use your notification settings (email / webhook)."
-msgstr "提醒通过你的通知设置（邮件 / Webhook）发送。"
+#~ msgid "Reminders use your notification settings (email / webhook)."
+#~ msgstr "提醒通过你的通知设置（邮件 / Webhook）发送。"
 
 #: src/components/login/login.tsx
 msgid "Request a one-time password"

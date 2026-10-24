@@ -532,9 +532,6 @@ export function BillingDialog({
 												<Trans>days before expiry</Trans>
 											</span>
 										</div>
-										<p className="text-xs text-muted-foreground">
-											<Trans>Reminders use your notification settings (email / webhook).</Trans>
-										</p>
 									</div>
 								</>
 							)}
