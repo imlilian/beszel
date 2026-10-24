@@ -2,6 +2,7 @@
 
 - 版本：v1.1
 - 配套文档：`docs/PRD-beszel-extensions.md`（**先读 PRD，再读本文**）
+- **进度看板：`docs/PROGRESS.md`（先看它，确认哪些阶段已完成、有哪些与本文的偏差）**
 - 基线：Beszel v0.21.1（commit `e2ed147a`）
 - 目标读者：后续执行 Agent（每个阶段可以独立开一次会话，按阶段边界提交）
 
@@ -435,22 +436,41 @@ bu?: number
 bd?: number
 ```
 
-#### 4. 卡片网络单元格 `systems-table-columns.tsx`
+#### 4. 表格/卡片网络列 `systems-table-columns.tsx`（**精确锚点：`id: "net"`，约 256–277 行**）
 
-新增一个小工具：
+现状：
 
-```ts
-/** 旧 Agent 只有合并值 bb；新 Agent 有 bu/bd。 */
-export function getBandwidthParts(info: SystemInfo) {
-  if (info.bu || info.bd) return { up: info.bu ?? 0, down: info.bd ?? 0, combined: false }
-  return { up: info.bb ?? 0, down: null, combined: true }
+```tsx
+{
+	accessorFn: ({ info, status }) => (status !== SystemStatus.Up ? undefined : info.bb),
+	id: "net",
+	cell(info) {
+		const val = info.getValue() as number | undefined
+		if (val === undefined) return null
+		const userSettings = useStore($userSettings, { keys: ["unitNet"] })
+		const { value, unit } = formatBytes(val, true, userSettings.unitNet, false)
+		return <span className="tabular-nums whitespace-nowrap">{decimalString(value, value >= 100 ? 1 : 2)} {unit}</span>
+	},
 }
 ```
 
-渲染：
+改动：
 
-- `combined=false`：两行（grid）/ 一行两段（table）显示 `↑ x` `↓ y`
-- `combined=true`：保持原样显示单值（带 `↕` 图标表示未分向）
+1. **`accessorFn` 不动**，继续用 `info.bb`（总吞吐）。理由：排序语义保持"总带宽"稳定；且新 Agent 的 `bb` 本来就等于 `bu + bd`，两种 Agent 排序结果一致。
+2. 新增小工具（放在该文件顶部或 `lib/utils.ts`）：
+
+```ts
+/** 旧 Agent 只上报合并值 bb；新 Agent 额外上报 bu/bd。 */
+export function getBandwidthParts(info: SystemInfo) {
+	if (info.bu || info.bd) return { up: info.bu ?? 0, down: info.bd ?? 0, combined: false as const }
+	return { up: info.bb ?? 0, down: null, combined: true as const }
+}
+```
+
+3. cell 渲染：
+   - `combined === false`：`viewMode === "table"` 时单行紧凑 `↑1.2 M/s ↓8.4 M/s`；grid 时两行（`↑` 一行、`↓` 一行），因为卡片列宽窄。
+   - `combined === true`（旧 Agent）：保持现有单值渲染，前面加一个 `↕` 小图标暗示"未分向"，不加也可以。
+   - 单位各自复用 `formatBytes(v, true, userSettings.unitNet, false)` 即可。**注意 `formatBytes` 会按数值自动选量级**（没有"强制指定单位"的参数），所以上行下行可能显示成 `↑1.2 MB/s` / `↓800 KB/s`。这是可接受的（Nezha/Komari 也是各自换算）；**不要**为了凑成同一单位去手写换算表或改 `formatBytes` 签名。
 
 #### 5. `internal/alerts/alerts_system.go`
 
