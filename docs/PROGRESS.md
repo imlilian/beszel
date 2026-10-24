@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-24（P3 完成时）
+> 最后更新：2026-10-24（P4 完成时）
 
 ## 1. 阶段状态
 
@@ -13,8 +13,8 @@
 | P1 监控名称 | ✅ 完成 | `db5fc40c` | 45 文件（含 34 个 `.po`） |
 | P2 900ms 计丢包 + 阈值 | ✅ 完成 | `28a05f0f` | Agent 归一化 + 前端阈值设置 |
 | P3 卡片上下行 | ✅ 完成 | `80197c5e` | `Info` 加 `bu/bd`（cbor 28/29），卡片 ↑↓ 分开显示 |
-| P4 监控卡片视图 | ⬜ **下一步** | — | 前端大头，拆 5 子步 |
-| P5 计费数据模型 | ⬜ 待开始 | — | 2 个新集合 |
+| P4 监控卡片视图 | ✅ 完成 | `f207b34f`→`d954fdd8`（5 提交） | 表格/卡片切换 + 20 色块 + 卡片墙 |
+| P5 计费数据模型 | ⬜ **下一步** | — | 2 个新集合 |
 | P6 计费前端 | ⬜ | — | — |
 | P7 到期提醒 | ⬜ | — | — |
 | P8 流量后端 | ⬜ | — | — |
@@ -49,6 +49,9 @@ git status --short            # 应无输出
 | `network_monitors.name` | 迁移 `1792847604` | 已在 `NETWORK_MONITOR_FIELDS`、`copyMonitorToNewRecord`、表单、批量 CSV 中打通 |
 | `system.Info.BandwidthUp/Down`（`bu`/`bd`） | `internal/entities/system/system.go` | 分向上/下行 bytes/s；旧 Agent 不上报，零值即"未知" |
 | `getBandwidthParts(info)` | `site/src/components/systems-table/systems-table-columns.tsx` | 返回 `{up, down, combined}`；`combined` 为 true 时用合并值 `bb` 单值渲染 |
+| `getBlockSpec` / `buildQualityBlocks` / `getBlockLevel` | `site/src/lib/monitor-blocks.ts` | 纯函数，按探测次数聚合成 20 个色块；`total === 0` 判 `empty` 不判丢包 |
+| `useMonitorCardStats({monitors, thresholds, enabled})` | `site/src/lib/use-monitor-cards.ts` | 每 type 一次 `getFullList` + 1 个 realtime 订阅，返回 `Map<monitorId, QualityBlock[]>`（新→旧） |
+| `QualityBlocks` / `MonitorCardGrid` / `getMonitorGridClass` | `site/src/components/network-monitors-table/` | 色块条（含部分丢包红边）与系统卡片墙；网格类必须照抄，别改断点 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
 ```ts
@@ -66,6 +69,11 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 7. **P3 的 `bu/bd` 用 `omitzero`**（PRD §7.1 原写 `omitempty`），与 `Info` 里 `Battery` / `SystemdLogs` 一致；JSON 与 CBOR 行为统一，零值不上报。cbor 28/29 已核实空闲（`Info` 占用 0–27，其中 19 是 LoadAvg，15–17 为废弃不复用区）。
 8. **P3 的 `getBandwidthParts` 放在 `systems-table-columns.tsx` 顶部**（计划允许放 `lib/utils.ts`）：只服务 net 列且需要 `SystemInfo` 类型。**未加**计划里标为可选的 `↕` 合并图标，旧 Agent 视觉与 v0.21.1 完全一致。
 9. **P3 的 grid 两行渲染直接用已有的 `viewMode` 参数**（`SystemsTableColumns(viewMode)` 在 P4 之前就已存在），无需新增状态；`accessorFn` 仍取 `info.bb`，所以 table/grid 两种视图排序结果一致。
+10. **P4：`alignNow` 用 `Math.ceil`，不是计划里的 `floor+1`**。计划同时要求"对齐后不抖动"和"幂等"（单测第 8 条），而 `floor+1` 在对齐点上会再加一个块（不幂等），右端色块会空一拍。`ceil(now / blockMs) * blockMs` 两条都满足，归一化块序号也不变。
+11. **P4：卡片右上角菜单不含 `AddMonitorDialog` 触发器**。它的触发器是「Add Monitor + 下拉」的文字按钮，放进 `lg:grid-cols-3` 的卡片头和系统名抢空间。全局页工具栏与单系统页已有同一入口（都能选系统），功能不缺失。卡内菜单保留「全部暂停 / 全部启用 / 系统详情」。
+12. **P4：`useMonitorCardStats` 多一个可选 `enabled`**（计划接口没写）。表格视图下不拉数据、不订阅，省掉一个全局 `network_monitor_stats` 实时订阅。
+13. **P4：卡片"无数据"时丢包显示 `—`**（PRD §6.4.4 口径），不是计划骨架里的无条件 `loss1h.toFixed(1)`。判据用 `resAvg1h === 0 && loss1h === 0`（`network_monitors` 记录里没有 `sampleCount` 字段，PRD 那句写的是理想字段）。
+14. **P4 的人工验收矩阵尚未在真实实例上跑过**（0/1/3/5/8 系统、interval 60s/120s/300s、全丢、窄屏、深色、RTL、200 监控下的请求数）。已通过的自动化部分：`tsc -b`、`vite build`、`bun test src/lib/`（44 pass，含色块聚合 11 条）、产物 CSS 已生成 `@[340px]` / `@[560px]` 容器查询规则。要做人工验收需 `make build-hub-dev` 并接入真实 Agent 数据。
 
 ## 5. 验证命令（Windows 实测可用）
 
