@@ -1,6 +1,7 @@
 import {
 	getCertDaysLeft,
 	getCertExpiryLevel,
+	getMonitorDisplayName,
 	getMonitorProtocolLabel,
 	getMonitorTarget,
 } from "@/lib/network-monitor-utils"
@@ -287,9 +288,10 @@ export default function NetworkMonitorsTableNew({
 			if (!value) return true
 			const monitor = row.original
 			const systemName = $allSystemsById.get()[monitor.system]?.name ?? ""
-			// Include the raw target so searches for the hidden URL scheme still match.
+			// Include the raw target so searches for the hidden URL scheme still match,
+			// and the custom name so a monitor can be found by its label.
 			const searchString =
-				`${getMonitorTarget(monitor)}${monitor.target}${monitor.protocol}${systemName}`.toLocaleLowerCase()
+				`${getMonitorDisplayName(monitor)}${monitor.name ?? ""}${monitor.target}${monitor.protocol}${systemName}`.toLocaleLowerCase()
 			return matchesFilterGroups(searchString, parseFilterGroups(value))
 		},
 	})
@@ -720,7 +722,9 @@ function NetworkMonitorSheetContent({
 	const hasMonitorStats = comparing
 		? monitorStats.some((record) => record.stats != null)
 		: monitorStats.some((record) => record.stats?.[monitor.id] != null)
-	const monitorLabel = getMonitorTarget(monitor)
+	const monitorLabel = getMonitorDisplayName(monitor)
+	const monitorTargetLabel = getMonitorTarget(monitor)
+	const hasCustomName = !!monitor.name?.trim()
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
@@ -732,6 +736,13 @@ function NetworkMonitorSheetContent({
 						<Link className="hover:underline" href={getPagePath($router, "system", { id: system?.id ?? "" })}>
 							{system?.name ?? ""}
 						</Link>
+						{hasCustomName && (
+							<>
+								<Separator orientation="vertical" className="h-2.5 bg-muted-foreground opacity-70" />
+								<EthernetPortIcon className="size-3.5 text-muted-foreground" />
+								<span>{monitorTargetLabel}</span>
+							</>
+						)}
 						<Separator orientation="vertical" className="h-2.5 bg-muted-foreground opacity-70" />
 						<ArrowLeftRightIcon className="size-3.5 text-muted-foreground -me-0.5" />
 						{getMonitorProtocolLabel(monitor).toUpperCase()}

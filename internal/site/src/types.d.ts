@@ -684,6 +684,8 @@ export interface UpdateInfo {
 export interface NetworkMonitorRecord {
 	id: string
 	system: string
+	/** Optional display name (e.g. "Shanghai Telecom"). Falls back to the target when empty. */
+	name?: string
 	target: string
 	protocol: "icmp" | "tcp" | "http" | "dns"
 	port: number

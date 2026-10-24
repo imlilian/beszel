@@ -36,6 +36,8 @@ type MonitorProtocol = "icmp" | "tcp" | "http" | "dns"
 
 type MonitorValues = {
 	system: string
+	/** Optional display name; empty falls back to the target. */
+	name: string
 	target: string
 	protocol: MonitorProtocol
 	port: number
@@ -48,7 +50,10 @@ type NormalizedMonitorValues = Omit<MonitorValues, "system" | "interval"> & {
 	interval: number
 }
 
-type BulkMonitorLineSource = Pick<NetworkMonitorRecord, "target" | "protocol" | "port" | "interval" | "server">
+type BulkMonitorLineSource = Pick<
+	NetworkMonitorRecord,
+	"name" | "target" | "protocol" | "port" | "interval" | "server"
+>
 
 const defaultInterval = 30
 
@@ -60,6 +65,8 @@ const MonitorIntervalSchema = v.pipe(v.string(), v.toNumber(), v.minValue(1), v.
 // defaults and HTTP target normalization stay in one place.
 const NormalizedMonitorValuesSchema = v.pipe(
 	v.object({
+		// Optional label shown instead of the target. Hub-only metadata; never part of the monitor ID.
+		name: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(100)), ""),
 		target: v.pipe(v.string(), v.trim(), v.nonEmpty("target is required")),
 		protocol: MonitorProtocolSchema,
 		port: v.number(),
@@ -79,6 +86,7 @@ const NormalizedMonitorValuesSchema = v.pipe(
 			port = 443
 		}
 		return {
+			name: input.name ?? "",
 			// HTTP monitors may be entered as bare hostnames, so normalize them to a
 			// scheme-bearing URL before the payload is sent to PocketBase.
 			target: protocol === "http" ? httpTarget : input.target,
@@ -119,6 +127,7 @@ function isIpAddress(value: string) {
 // Bulk parsing only trims raw CSV fields. Inference, defaults, and protocol-
 // specific validation still go through the shared normalization schema above.
 const BulkMonitorSchema = v.object({
+	name: v.optional(v.pipe(v.string(), v.trim())),
 	target: v.pipe(v.string(), v.trim(), v.nonEmpty("target is required")),
 	protocol: v.optional(v.pipe(v.string(), v.trim())),
 	port: v.optional(v.pipe(v.string(), v.trim())),
@@ -182,8 +191,11 @@ function getMonitorIdentityKey({ system, target, protocol, port, server }: Monit
 }
 
 function parseBulkMonitorLine(line: string, lineNumber: number, system: string) {
-	const [rawTarget = "", rawProtocol = "", rawPort = "", rawInterval = "", rawServer = ""] = line.split(",")
+	// name is a trailing optional column so existing 5-field lines keep working
+	const [rawTarget = "", rawProtocol = "", rawPort = "", rawInterval = "", rawServer = "", rawName = ""] =
+		line.split(",")
 	const parsed = v.safeParse(BulkMonitorSchema, {
+		name: rawName,
 		target: rawTarget,
 		protocol: rawProtocol,
 		port: rawPort,
@@ -198,6 +210,7 @@ function parseBulkMonitorLine(line: string, lineNumber: number, system: string) 
 
 	return buildMonitorPayload({
 		system,
+		name: parsed.output.name || "",
 		target: parsed.output.target,
 		protocol,
 		port: parsed.output.port ? Number(parsed.output.port) : 0,
@@ -211,7 +224,9 @@ export function formatBulkMonitorLine(monitor: BulkMonitorLineSource) {
 	const port = monitor.protocol !== "tcp" || monitor.port === 443 ? "" : `${monitor.port}`
 	const interval = monitor.interval === defaultInterval ? "" : `${monitor.interval}`
 	const server = monitor.protocol !== "dns" ? "" : monitor.server
-	return trimTrailingEmptyFields([monitor.target, monitor.protocol, port, interval, server]).join(",")
+	// name is appended last so 5-field lines stay valid for older input
+	const name = monitor.name?.trim() ?? ""
+	return trimTrailingEmptyFields([monitor.target, monitor.protocol, port, interval, server, name]).join(",")
 }
 
 export function SystemMultiSelect({
@@ -636,7 +651,7 @@ export function AddMonitorDialog({ systemId, monitors }: { systemId?: string; mo
 							<Trans>Bulk Add {{ foo: t`Network Monitors` }}</Trans>
 						</SheetTitle>
 						<SheetDescription>
-							<Trans>target[,protocol[,port[,interval[,server]]]]</Trans>
+							<Trans>target[,protocol[,port[,interval[,server[,name]]]]]</Trans>
 						</SheetDescription>
 					</SheetHeader>
 					<form ref={bulkFormRef} onSubmit={handleBulkSubmit} className="flex h-full flex-col overflow-hidden">
@@ -679,7 +694,7 @@ export function AddMonitorDialog({ systemId, monitors }: { systemId?: string; mo
 									required
 								/>
 								<p className="text-xs text-muted-foreground">
-									<Trans>target[,protocol[,port[,interval[,server]]]]</Trans>
+									<Trans>target[,protocol[,port[,interval[,server[,name]]]]]</Trans>
 								</p>
 							</div>
 						</div>
@@ -732,6 +747,7 @@ function MonitorDialogContent({
 	onOpenBulkAdd?: (selectedSystemIds: Set<string>) => void
 }) {
 	const [protocol, setProtocol] = useState<MonitorProtocol>(monitor?.protocol ?? "icmp")
+	const [name, setName] = useState(monitor?.name ?? "")
 	const [target, setTarget] = useState(monitor?.target ?? "")
 	const [port, setPort] = useState(monitor?.protocol === "tcp" && monitor.port ? String(monitor.port) : "")
 	const [server, setServer] = useState(monitor?.protocol === "dns" ? (monitor.server ?? "") : "")
@@ -755,6 +771,7 @@ function MonitorDialogContent({
 		}
 
 		setProtocol(monitor?.protocol ?? "icmp")
+		setName(monitor?.name ?? "")
 		setTarget(monitor?.target ?? "")
 		setPort(monitor?.protocol === "tcp" && monitor.port ? String(monitor.port) : "")
 		setServer(monitor?.protocol === "dns" ? (monitor.server ?? "") : "")
@@ -776,6 +793,7 @@ function MonitorDialogContent({
 			const payload = buildMonitorPayload(
 				{
 					system: targetSystems[0],
+					name,
 					target,
 					protocol,
 					port: protocol === "tcp" ? Number(port) : 0,
@@ -854,6 +872,24 @@ function MonitorDialogContent({
 						</Select>
 					</div>
 				)}
+				<div className="grid gap-2">
+					<Label htmlFor="monitor-name">
+						<Trans>Name</Trans>{" "}
+						<span className="text-xs font-normal text-muted-foreground">
+							<Trans>(optional)</Trans>
+						</span>
+					</Label>
+					<Input
+						id="monitor-name"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						placeholder={t`e.g. Shanghai Telecom`}
+						maxLength={100}
+					/>
+					<p className="text-xs text-muted-foreground">
+						<Trans>Shown instead of the target when set.</Trans>
+					</p>
+				</div>
 				<div className="grid gap-2">
 					<Label>
 						<Trans>Target</Trans>

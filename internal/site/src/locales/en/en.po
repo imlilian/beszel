@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "(optional)"
+msgstr "(optional)"
+
 #. placeholder {0}: newVersion.v
 #: src/components/footer-repo-link.tsx
 msgctxt "New version available"
@@ -246,13 +250,13 @@ msgstr "Are you sure?"
 msgid "Automatic copy requires a secure context."
 msgstr "Automatic copy requires a secure context."
 
-#: src/components/routes/system/storage-pools-table.tsx
-msgctxt "Disk space available"
+#. Package version available to install
+#: src/components/routes/system/package-updates-table.tsx
 msgid "Available"
 msgstr "Available"
 
-#. Package version available to install
-#: src/components/routes/system/package-updates-table.tsx
+#: src/components/routes/system/storage-pools-table.tsx
+msgctxt "Disk space available"
 msgid "Available"
 msgstr "Available"
 
@@ -868,6 +872,10 @@ msgstr "Download"
 msgid "Duration"
 msgstr "Duration"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "e.g. Shanghai Telecom"
+msgstr "e.g. Shanghai Telecom"
+
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1412,6 +1420,7 @@ msgstr "Mountpoint"
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Name"
@@ -2051,6 +2060,10 @@ msgstr "Settings saved"
 msgid "Show timestamps"
 msgstr "Show timestamps"
 
+#: src/components/network-monitors-table/monitor-dialog.tsx
+msgid "Shown instead of the target when set."
+msgstr "Shown instead of the target when set."
+
 #: src/components/login/auth-form.tsx
 msgid "Sign in"
 msgstr "Sign in"
@@ -2161,8 +2174,13 @@ msgstr "Target"
 
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
-msgid "target[,protocol[,port[,interval[,server]]]]"
-msgstr "target[,protocol[,port[,interval[,server]]]]"
+msgid "target[,protocol[,port[,interval[,server[,name]]]]]"
+msgstr "target[,protocol[,port[,interval[,server[,name]]]]]"
+
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#: src/components/network-monitors-table/monitor-dialog.tsx
+#~ msgid "target[,protocol[,port[,interval[,server]]]]"
+#~ msgstr "target[,protocol[,port[,interval[,server]]]]"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Tasks"

@@ -38,6 +38,7 @@ import { Badge } from "../ui/badge"
 import {
 	getCertDaysLeft,
 	getCertExpiryLevel,
+	getMonitorDisplayName,
 	getMonitorProtocolLabel,
 	getMonitorTarget,
 } from "@/lib/network-monitor-utils"
@@ -142,7 +143,7 @@ export function getMonitorColumns({
 			meta: { label: t`Target` },
 			sortingFn: (a, b) =>
 				(a.getValue("target") as string).localeCompare(b.getValue("target") as string, undefined, { numeric: true }),
-			accessorFn: (record) => getMonitorTarget(record),
+			accessorFn: (record) => getMonitorDisplayName(record),
 			header: ({ column }) => <HeaderButton column={column} name={t`Target`} Icon={GlobeIcon} />,
 			cell: ({ row, getValue }) => {
 				const monitor = row.original
@@ -156,10 +157,20 @@ export function getMonitorColumns({
 				} else if (monitor.updated && !monitor.res) {
 					color = "bg-red-500"
 				}
+				// A custom name becomes the primary label, with the probed target kept as context.
+				const displayName = getValue() as string
+				const showTarget = !!monitor.name?.trim() && monitor.name.trim() !== displayName
 				return (
 					<div className="ms-1.5 max-w-64 flex gap-2 items-center tabular-nums">
 						<span className={cn("shrink-0 size-2 rounded-full", color)} />
-						<span className="truncate">{getValue() as string}</span>
+						{showTarget ? (
+							<div className="min-w-0 leading-tight">
+								<div className="truncate">{displayName}</div>
+								<div className="truncate text-[11px] text-muted-foreground">{getMonitorTarget(monitor)}</div>
+							</div>
+						) : (
+							<span className="truncate">{displayName}</span>
+						)}
 					</div>
 				)
 			},

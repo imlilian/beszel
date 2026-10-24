@@ -19,6 +19,17 @@ export function isHttpsTarget(target: string) {
 	return /^https:\/\//i.test(target)
 }
 
+/**
+ * What to show as the monitor's title: the user-provided name when set, otherwise the
+ * protocol-formatted target. The name is hub-only metadata, so it never affects the monitor ID.
+ */
+export function getMonitorDisplayName(
+	monitor: Pick<NetworkMonitorRecord, "name" | "target" | "protocol" | "port">
+) {
+	const name = monitor.name?.trim()
+	return name ? name : getMonitorTarget(monitor)
+}
+
 /** The protocol to show next to a target, since getMonitorTarget hides whether an HTTP monitor uses https. */
 export function getMonitorProtocolLabel(monitor: Pick<NetworkMonitorRecord, "target" | "protocol">) {
 	return monitor.protocol === "http" && isHttpsTarget(monitor.target) ? "https" : monitor.protocol
