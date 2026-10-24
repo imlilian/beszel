@@ -13,6 +13,7 @@ import { HourFormat, Unit } from "@/lib/enums"
 import { dynamicActivate } from "@/lib/i18n"
 import languages from "@/lib/languages"
 import { $chartTime, $userSettings, defaultLayoutWidth, getUserChartTime } from "@/lib/stores"
+import { DEFAULT_MONITOR_THRESHOLDS, getMonitorThresholds } from "@/lib/monitor-thresholds"
 import { chartTimeData, currentHour12 } from "@/lib/utils"
 import type { UserSettings } from "@/types"
 import { saveSettings } from "./layout"
@@ -22,6 +23,7 @@ export default function SettingsProfilePage({ userSettings }: { userSettings: Us
 	const { i18n } = useLingui()
 	const currentUserSettings = useStore($userSettings)
 	const layoutWidth = currentUserSettings.layoutWidth ?? defaultLayoutWidth
+	const monitorThresholds = getMonitorThresholds(currentUserSettings)
 	// without a value the hidden select submits an empty string, which would persist
 	// a chart time that no longer loads any data (#2104)
 	const chartTime = getUserChartTime(userSettings)
@@ -31,6 +33,11 @@ export default function SettingsProfilePage({ userSettings }: { userSettings: Us
 		setIsLoading(true)
 		const formData = new FormData(e.target as HTMLFormElement)
 		const data = Object.fromEntries(formData) as Partial<UserSettings>
+		// Number inputs submit strings (and may be empty), so normalize through the same
+		// helper the display code uses before persisting.
+		const thresholds = getMonitorThresholds(data)
+		data.monitorWarnMs = thresholds.warnMs
+		data.monitorCritMs = thresholds.critMs
 		await saveSettings(data)
 		// apply the saved default time period to the active charts
 		$chartTime.set(getUserChartTime())
@@ -282,6 +289,56 @@ export default function SettingsProfilePage({ userSettings }: { userSettings: Us
 							/>
 						</div>
 					</div>
+				</div>
+				<Separator />
+				<div className="grid gap-2">
+					<div className="mb-2">
+						<h3 className="mb-1 text-lg font-medium">
+							<Trans>Monitor thresholds</Trans>
+						</h3>
+						<p className="text-sm text-muted-foreground leading-relaxed">
+							<Trans>
+								Color network monitor latency values by response time. These only affect colors; probes slower than the
+								agent's loss threshold (900ms by default) are already counted as packet loss.
+							</Trans>
+						</p>
+					</div>
+					<div className="grid grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+						<div className="grid gap-2">
+							<Label htmlFor="monitorWarnMs">
+								<Trans>Warning (ms)</Trans>
+							</Label>
+							<Input
+								id="monitorWarnMs"
+								name="monitorWarnMs"
+								type="number"
+								min={1}
+								max={60000}
+								className="min-w-24"
+								defaultValue={userSettings.monitorWarnMs ?? DEFAULT_MONITOR_THRESHOLDS.warnMs}
+							/>
+						</div>
+						<div className="grid gap-1">
+							<Label htmlFor="monitorCritMs">
+								<Trans>Critical (ms)</Trans>
+							</Label>
+							<Input
+								id="monitorCritMs"
+								name="monitorCritMs"
+								type="number"
+								min={1}
+								max={60000}
+								className="min-w-24"
+								defaultValue={userSettings.monitorCritMs ?? DEFAULT_MONITOR_THRESHOLDS.critMs}
+							/>
+						</div>
+					</div>
+					<p className="text-xs text-muted-foreground">
+						<Trans>
+							Currently: {monitorThresholds.warnMs} ms or less is green, up to {monitorThresholds.critMs} ms is yellow,
+							anything slower is red.
+						</Trans>
+					</p>
 				</div>
 				<Separator />
 				<Button type="submit" className="flex items-center gap-1.5 disabled:opacity-100" disabled={isLoading}>

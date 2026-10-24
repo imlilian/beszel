@@ -86,17 +86,20 @@ func (task *monitorTask) runProbe(probe monitorProbe) *monitor.Result {
 	task.runMu.Unlock()
 
 	generation, _ := task.resumeGuard.snapshot()
-	responseUs, err := probe(task.ctx, task.config)
-	var logFailure bool
+	rawResponseUs, err := probe(task.ctx, task.config)
+	var logFailure, logSlow bool
 	task.runMu.Lock()
 	currentGeneration, _ := task.resumeGuard.snapshot()
 	if task.ctx.Err() == nil && generation == currentGeneration {
 		now := time.Now()
-		if err != nil {
-			responseUs = -1
+		// Slow-but-successful probes are folded in as loss so every derived value
+		// (loss %, avg/min/max, stored stats, loss alerts) agrees on what loss means.
+		responseUs, outcome := classifyProbe(rawResponseUs, err, lossThresholdUs())
+		if outcome != probeOK {
 			logAt := now.UnixNano()
 			if task.lastFailureLog == 0 || logAt < task.lastFailureLog || logAt-task.lastFailureLog >= int64(monitorFailureLogInterval) {
-				logFailure = true
+				logFailure = outcome == probeFailed
+				logSlow = outcome == probeSlow
 				task.lastFailureLog = logAt
 			}
 		} else {
@@ -111,6 +114,9 @@ func (task *monitorTask) runProbe(probe monitorProbe) *monitor.Result {
 	task.runMu.Unlock()
 	if logFailure {
 		slog.Warn("monitor failed", "err", err, "target", task.config.Target, "protocol", task.config.Protocol)
+	}
+	if logSlow {
+		slog.Warn("monitor slow, counted as loss", "res_us", rawResponseUs, "target", task.config.Target, "protocol", task.config.Protocol)
 	}
 	if task.ctx.Err() != nil {
 		return nil

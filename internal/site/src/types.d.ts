@@ -404,6 +404,9 @@ export interface UserSettings {
 	monitorCols?: Record<string, boolean>
 	monitorSortMode?: Array<{ id: string; desc: boolean }>
 	monitorSortModeSystem?: Array<{ id: string; desc: boolean }>
+	/** Display-only latency thresholds in ms for monitor colors (does not affect collected data). */
+	monitorWarnMs?: number
+	monitorCritMs?: number
 	grid?: boolean
 	displayMode?: "default" | "tabs"
 }

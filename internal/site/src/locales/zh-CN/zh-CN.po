@@ -545,6 +545,10 @@ msgstr "点击系统查看更多信息。"
 msgid "Click to copy"
 msgstr "点击复制"
 
+#: src/components/routes/settings/general.tsx
+msgid "Color network monitor latency values by response time. These only affect colors; probes slower than the agent's loss threshold (900ms by default) are already counted as packet loss."
+msgstr "按响应时间为网络监控的延迟数值着色。此项只影响颜色；超过 Agent 丢包阈值（默认 900 毫秒）的探测已被计为丢包。"
+
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
 msgid "Command line instructions"
@@ -724,6 +728,10 @@ msgstr "创建时间"
 msgid "Critical (%)"
 msgstr "临界 (%)"
 
+#: src/components/routes/settings/general.tsx
+msgid "Critical (ms)"
+msgstr "严重（毫秒）"
+
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Cumulative data read since boot"
 msgstr "启动以来读取的数据量"
@@ -759,6 +767,12 @@ msgstr "当前"
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "当前状态"
+
+#. placeholder {0}: monitorThresholds.warnMs
+#. placeholder {1}: monitorThresholds.critMs
+#: src/components/routes/settings/general.tsx
+msgid "Currently: {0} ms or less is green, up to {1} ms is yellow, anything slower is red."
+msgstr "当前：{0} 毫秒以内为绿色，{1} 毫秒以内为黄色，更慢为红色。"
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -1413,6 +1427,10 @@ msgstr "型号"
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitor"
 msgstr "监控"
+
+#: src/components/routes/settings/general.tsx
+msgid "Monitor thresholds"
+msgstr "监控阈值"
 
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
@@ -2553,6 +2571,10 @@ msgstr "希望"
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"
 msgstr "警告 (%)"
+
+#: src/components/routes/settings/general.tsx
+msgid "Warning (ms)"
+msgstr "警告（毫秒）"
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning thresholds"

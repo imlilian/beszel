@@ -28,7 +28,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Plural, Trans } from "@lingui/react/macro"
-import { $allSystemsById } from "@/lib/stores"
+import { $allSystemsById, $userSettings } from "@/lib/stores"
 import { useStore } from "@nanostores/react"
 import { SystemStatus } from "@/lib/enums"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -42,6 +42,7 @@ import {
 	getMonitorProtocolLabel,
 	getMonitorTarget,
 } from "@/lib/network-monitor-utils"
+import { getMonitorLevel, getMonitorThresholds, monitorLevelBg } from "@/lib/monitor-thresholds"
 
 const certExpiryDotColors = { ok: "bg-green-500", warning: "bg-yellow-500", critical: "bg-red-500" }
 
@@ -379,16 +380,12 @@ export function getMonitorColumns({
 	]
 }
 
-const responseTimeThresholds = {
-	http: { warning: 800_000, critical: 3_000_000 },
-	tcp: { warning: 500_000, critical: 2_000_000 },
-	icmp: { warning: 100_000, critical: 500_000 },
-	dns: { warning: 150_000, critical: 800_000 },
-}
-
 function responseTimeCell(cell: CellContext<NetworkMonitorRecord, unknown>) {
 	const monitor = cell.row.original
 	const systemRecord = useStore($allSystemsById)[monitor.system]
+	// Subscribe to just these keys so unrelated settings changes don't re-render every row.
+	const thresholdSettings = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
+	const thresholds = getMonitorThresholds(thresholdSettings)
 	const responseTime = cell.getValue() as number | undefined
 
 	if (!responseTime) {
@@ -396,15 +393,7 @@ function responseTimeCell(cell: CellContext<NetworkMonitorRecord, unknown>) {
 	}
 
 	const muted = isMuted(monitor, systemRecord)
-	let color = "bg-green-500"
-	if (muted) {
-		color = "bg-muted-foreground/50"
-	} else if (responseTime > responseTimeThresholds[monitor.protocol].warning) {
-		color = "bg-yellow-500"
-	}
-	if (!muted && responseTime > responseTimeThresholds[monitor.protocol].critical) {
-		color = "bg-red-500"
-	}
+	const color = muted ? "bg-muted-foreground/50" : monitorLevelBg[getMonitorLevel(responseTime, thresholds)]
 	return (
 		<span className="ms-1.5 tabular-nums flex gap-2 items-center">
 			<span className={cn("shrink-0 size-2 rounded-full", color)} />

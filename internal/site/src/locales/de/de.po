@@ -545,6 +545,10 @@ msgstr "Klicke auf ein System, um weitere Informationen zu sehen."
 msgid "Click to copy"
 msgstr "Zum Kopieren klicken"
 
+#: src/components/routes/settings/general.tsx
+msgid "Color network monitor latency values by response time. These only affect colors; probes slower than the agent's loss threshold (900ms by default) are already counted as packet loss."
+msgstr ""
+
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
 msgid "Command line instructions"
@@ -724,6 +728,10 @@ msgstr "Erstellt"
 msgid "Critical (%)"
 msgstr "Kritisch (%)"
 
+#: src/components/routes/settings/general.tsx
+msgid "Critical (ms)"
+msgstr ""
+
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Cumulative data read since boot"
 msgstr "Seit dem Start insgesamt gelesene Daten"
@@ -759,6 +767,12 @@ msgstr "Aktuell"
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Aktueller Zustand"
+
+#. placeholder {0}: monitorThresholds.warnMs
+#. placeholder {1}: monitorThresholds.critMs
+#: src/components/routes/settings/general.tsx
+msgid "Currently: {0} ms or less is green, up to {1} ms is yellow, anything slower is red."
+msgstr ""
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -1413,6 +1427,10 @@ msgstr "Modell"
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitor"
 msgstr "Monitor"
+
+#: src/components/routes/settings/general.tsx
+msgid "Monitor thresholds"
+msgstr ""
 
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
@@ -2553,6 +2571,10 @@ msgstr "Möchte"
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"
 msgstr "Warnung (%)"
+
+#: src/components/routes/settings/general.tsx
+msgid "Warning (ms)"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning thresholds"

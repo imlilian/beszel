@@ -603,43 +603,46 @@ if err != nil {
 
 | 阈值 | 归属 | 默认 | 可配置 | 作用 |
 |---|---|---|---|---|
-| 丢包阈值 | **Agent** | 900ms | `MONITOR_LOSS_THRESHOLD_MS`（Agent 环境变量） | 决定“是不是丢包”，影响统计数据 |
-| 展示阈值 | **前端** | warn 150ms / crit 400ms | 用户设置 `monitorThresholds` | 只决定颜色，不影响数据 |
+| 丢包阈值 | **Agent** | 900ms | `MONITOR_LOSS_THRESHOLD_MS`（Agent 环境变量，`<=0` 关闭） | 决定“是不是丢包”，影响统计数据 |
+| 展示阈值 | **前端** | warn 150ms / crit 400ms | 用户设置 `monitorWarnMs` / `monitorCritMs`（设置页 → General） | 只决定颜色，不影响数据 |
 
 理由：丢包阈值改的是**数据语义**，必须由采集端统一（否则不同 Agent 数据不可比）；展示阈值是**个人偏好**，放前端不产生迁移与重启成本。
 
 **用户设置结构（`user_settings.settings` JSON，无需迁移）**：
 
+沿用 `colorWarn` / `colorCrit` 的**扁平键**约定（设置表单用 `FormData` 提交，值为字符串，读取端统一 `parseInt` + 夹取）：
+
 ```ts
-monitorThresholds?: {
-  warnMs: number   // default 150
-  critMs: number   // default 400
-}
+monitorWarnMs?: number   // default 150
+monitorCritMs?: number   // default 400（若 <= warnMs，自动抬到 warnMs + 1）
 ```
 
-**颜色映射（统一函数）**：
+**颜色映射（统一函数 `lib/monitor-thresholds.ts`）**：
 
 ```ts
-// lib/monitor-thresholds.ts
-export function getMonitorLevel(resUs: number | null | undefined, t: {warnMs:number; critMs:number}) {
-  if (resUs == null || resUs < 0) return "loss"      // 无数据 / 丢包
+export function getMonitorLevel(resUs: number | null | undefined, t = DEFAULT_MONITOR_THRESHOLDS): MonitorLevel {
+  if (resUs == null || resUs < 0) return "loss"      // 丢包（Agent 把失败与超阈值都记为 -1）
   if (resUs <= t.warnMs * 1000) return "good"        // 绿
   if (resUs <= t.critMs * 1000) return "warn"        // 黄
   return "crit"                                      // 红（<900ms，因为 ≥900 已被 Agent 计为丢包）
 }
 ```
 
-颜色取值（Tailwind 语义类，跟随主题明暗）：
+> 该文件还导出 `monitorLevelBg` / `monitorLevelText` 两张颜色表 + `getMonitorThresholds(settings)`（负责字符串强转、非法值回落、`crit > warn` 约束），表格与 P4 色块共用，避免两处配色漂移。
+
+颜色取值（Tailwind 语义类，跟随主题明暗；**复用项目已有的 green/yellow/red**，与 `certExpiryDotColors`、`SYSTEM_STATUS_COLORS` 保持一致）：
 
 | level | 文本 | 色块背景 | 说明 |
 |---|---|---|---|
-| good | `text-emerald-600 dark:text-emerald-400` | `bg-emerald-500` | ≤150ms |
+| good | （默认色） | `bg-green-500` | ≤150ms |
 | warn | `text-yellow-600 dark:text-yellow-500` | `bg-yellow-500` | 150–400ms |
 | crit | `text-red-500` | `bg-red-500` | 400–900ms |
 | loss | `text-red-600 dark:text-red-400` | `bg-red-600` | 全丢 / 丢包 ≥50% / 超时 / 错误 / ≥900ms |
 | empty | `text-muted-foreground` | `bg-muted` | 该时段无探测样本（**不是丢包**） |
 
-**替换现有硬编码**：`network-monitors-columns.tsx::responseTimeThresholds` 的按协议阈值改为读用户设置。**Q6 已定：统一全局 150/400ms，不做 per-monitor 覆盖**（已存在的按协议硬编码值直接删除，不做迁移兼容）。
+**替换现有硬编码**：`network-monitors-columns.tsx::responseTimeThresholds` 的按协议阈值**已删除**（P2 完成）。**Q6 已定：统一全局 150/400ms，不做 per-monitor 覆盖，后续也不需要**。
+
+> 注意对比度：`crit` 用 `bg-red-500`、`loss` 用 `bg-red-600`。两者深浅不同但同属红色系，因为“慢到红”和“丢了”对用户是同一个动作（去详情页看）。若调成两种色相会破坏“绿黄红”的直觉。
 
 ### 6.4 3.4 卡片视图（核心交互）
 
@@ -1005,7 +1008,7 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 | Q3 | 免打扰时段内到期提醒是否仍要送达？ | **遵守免打扰**（保持一致）；若需必达，后续给 `SendAlert` 加 `IgnoreQuietHours` |
 | Q4 | 提醒/重置的时区？ | **Hub 进程本地时区**，部署时设 `TZ` |
 | Q5 | 提醒发给谁？ | **系统所有成员**（`systems.users`） |
-| Q6 | 150/400ms 阈值是全局还是按监控？ | **全局用户设置**（`user_settings.monitorThresholds`）。**已确认：不做 per-monitor 覆盖，后续也不需要** |
+| Q6 | 150/400ms 阈值是全局还是按监控？ | **全局用户设置**（`user_settings.monitorWarnMs` / `monitorCritMs`，设置页 → General 可改）。**已确认：不做 per-monitor 覆盖，后续也不需要** |
 | Q7 | 900ms 是否适用所有协议？ | **是**（HTTP/TCP/ICMP/DNS 统一），通过 Agent 环境变量可调 |
 | Q8 | 流量是否要历史曲线？ | **MVP 不做**；若要做，用现有 10 分钟聚合 Cron 增量落 `traffic_daily`，作为独立阶段 |
 | Q9 | 暂停系统是否计流量？ | **不计**，卡片灰显提示 |

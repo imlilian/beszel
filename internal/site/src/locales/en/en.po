@@ -540,6 +540,10 @@ msgstr "Click on a system to view more information."
 msgid "Click to copy"
 msgstr "Click to copy"
 
+#: src/components/routes/settings/general.tsx
+msgid "Color network monitor latency values by response time. These only affect colors; probes slower than the agent's loss threshold (900ms by default) are already counted as packet loss."
+msgstr "Color network monitor latency values by response time. These only affect colors; probes slower than the agent's loss threshold (900ms by default) are already counted as packet loss."
+
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
 msgid "Command line instructions"
@@ -719,6 +723,10 @@ msgstr "Created"
 msgid "Critical (%)"
 msgstr "Critical (%)"
 
+#: src/components/routes/settings/general.tsx
+msgid "Critical (ms)"
+msgstr "Critical (ms)"
+
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Cumulative data read since boot"
 msgstr "Cumulative data read since boot"
@@ -754,6 +762,12 @@ msgstr "Current"
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Current state"
+
+#. placeholder {0}: monitorThresholds.warnMs
+#. placeholder {1}: monitorThresholds.critMs
+#: src/components/routes/settings/general.tsx
+msgid "Currently: {0} ms or less is green, up to {1} ms is yellow, anything slower is red."
+msgstr "Currently: {0} ms or less is green, up to {1} ms is yellow, anything slower is red."
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -1408,6 +1422,10 @@ msgstr "Model"
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitor"
 msgstr "Monitor"
+
+#: src/components/routes/settings/general.tsx
+msgid "Monitor thresholds"
+msgstr "Monitor thresholds"
 
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
@@ -2548,6 +2566,10 @@ msgstr "Wants"
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"
 msgstr "Warning (%)"
+
+#: src/components/routes/settings/general.tsx
+msgid "Warning (ms)"
+msgstr "Warning (ms)"
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning thresholds"

@@ -64,9 +64,22 @@ GOOS=linux go build ./...
 # 前端：先同步 i18n（新增文案后必跑），再类型检查 + 构建
 cd internal/site && npm run sync && npx tsc -b && npm run build
 
+# 前端单测（bun 未安装时用 npx 拉一个）
+cd internal/site && npx --yes bun test
+
 # 开发态 Hub
 make build-hub-dev
 ```
+
+## 5.1 前端单测基线
+
+本机没有全局 `bun`，用 `npx --yes bun` 即可（bun 1.4.4）。
+
+`npx --yes bun test` 全量：**33 pass / 4 fail**。4 个失败都在 `internal/site/tests/*.test.ts`（`chart-time`、`network-monitor-utils`、`token-value`、`utils`），表现为模块加载期 `Unhandled error between tests`，根因是 `src/lib/stores.ts` 在模块顶层读 `localStorage`，而 bun 默认环境没有 DOM。
+
+**这是基线问题，与业务改动无关**。真正贴源码的测试（`src/lib/*.test.ts`）全部通过。
+
+> 后续判定标准：`npx --yes bun test src/lib/...` 必须全绿；`internal/site/tests/` 的 4 个失败不算回归。若要修，给 `bunfig.toml` 加 `[test] preload` 注入 localStorage stub —— 不在本次范围。
 
 ## 6. 工作区约定
 

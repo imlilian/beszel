@@ -333,9 +333,9 @@ if err != nil {
 #### 3. 前端阈值工具 `internal/site/src/lib/monitor-thresholds.ts`（新建）
 
 ```ts
-export type MonitorLevel = "good" | "warn" | "crit" | "loss"
+export type MonitorLevel = "good" | "warn" | "crit" | "loss" | "empty"
 
-export const DEFAULT_MONITOR_THRESHOLDS = { warnMs: 150, critMs: 400 } as const
+export const DEFAULT_MONITOR_THRESHOLDS = { warnMs: 150, critMs: 400 }
 
 export function getMonitorLevel(resUs: number | null | undefined, t = DEFAULT_MONITOR_THRESHOLDS): MonitorLevel {
   if (resUs == null || resUs < 0) return "loss"
@@ -344,33 +344,39 @@ export function getMonitorLevel(resUs: number | null | undefined, t = DEFAULT_MO
   return "crit"
 }
 
-/** 文本色 / 背景色 / 圆点色，全部带 dark 变体 */
-export const monitorLevelStyles: Record<MonitorLevel, { text: string; bg: string; dot: string; label: string }> = { ... }
+/** 设置值可能是字符串（FormData 提交）、空、0 或大小颠倒，统一在这里收拾干净 */
+export function getMonitorThresholds(settings?: Partial<UserSettings> | null): MonitorThresholds
+
+/** 背景色 / 文本色两张表，表格与 P4 色块共用，避免两处配色漂移 */
+export const monitorLevelBg: Record<MonitorLevel, string>
+export const monitorLevelText: Record<MonitorLevel, string>
 ```
 
-#### 4. 用户设置类型 `types.d.ts::UserSettings`
+#### 4. 用户设置类型 `types.d.ts::UserSettings`（扁平键，与 `colorWarn`/`colorCrit` 一致）
 
 ```ts
-/** 监控展示阈值（毫秒），仅影响颜色不影响数据 */
-monitorThresholds?: { warnMs: number; critMs: number }
+/** 展示用延迟阈值（毫秒），仅影响颜色不影响数据 */
+monitorWarnMs?: number
+monitorCritMs?: number
 ```
 
 #### 5. 替换硬编码阈值 `network-monitors-columns.tsx`
 
-- 删除 `responseTimeThresholds`（按协议硬编码），改为读 `$userSettings.monitorThresholds ?? DEFAULT_MONITOR_THRESHOLDS`。
-- 状态点、`Average` 单元格颜色统一走 `getMonitorLevel` + `monitorLevelStyles`。
-- 若担心“按协议阈值更准”，保留 `responseTimeThresholds` 作为**初始化默认**（首次进入时把当前协议的阈值写进用户设置），但展示一律读用户设置。
+- 删除 `responseTimeThresholds`（按协议硬编码），改为 `getMonitorThresholds(useStore($userSettings))`。
+- 单元格圆点颜色统一走 `monitorLevelBg[getMonitorLevel(...)]`；`muted` 状态仍单独处理。
+
+#### 6. 设置入口 `routes/settings/general.tsx`
+
+在「Warning thresholds」之后新增「Monitor thresholds」小节（两个 `type="number"` 输入，`name="monitorWarnMs"` / `monitorCritMs`）。
+**注意**：该页面用 `FormData` + `Object.fromEntries` 取所有字段，值都是**字符串**，提交前必须用 `getMonitorThresholds(data)` 归一化后再写回，否则会把 `"150"` / `""` 存进 JSON。
 
 ### 测试
 
-1. `agent/network_monitor_task_test.go` 新增：
-   - `100ms` 样本 → `successCount=1`
-   - `950ms` 样本 → `successCount=0`、`PacketLoss=100`
-   - `MONITOR_LOSS_THRESHOLD_MS=0` → `950ms` 样本正常计入成功
-   - `MONITOR_LOSS_THRESHOLD_MS=1500` → `950ms` 正常计入成功
-2. `agent/network_monitor_history_test.go`：确认现有用例（`responseUs: 1000`）**不受影响**（1000 微秒 = 1ms）。
-3. 手动：`tc netem delay 1200ms` 目标 → UI 丢包 100%，`loss1h` 同步。
-4. 手动：`delay 500ms` → 红色但不丢包。
+1. `agent/network_monitor_thresholds_test.go`（新建）：`lossThresholdUs` 的默认/覆盖/0/负数/非法值；`classifyProbe` 阈值边界（899_999 / 900_000）；归一化后 `PacketLoss`、`SuccessCount`、`ResponseSum`、`AvgResponse` 同步变化。
+2. `internal/site/src/lib/monitor-thresholds.test.ts`（新建，`bun test`）：默认值、字符串强转、非法值回落、`crit > warn` 约束、150/400ms 边界。
+3. 回归：现有 `network_monitor_history_test.go` 用例（`responseUs: 1000` = 1ms）**不应受影响**。
+4. 手动：`tc netem delay 1200ms` 目标 → UI 丢包 100%，`loss1h` 同步；`delay 500ms` → 红色但不丢包。
+5. 手动：设置页把 warn 改成 300ms，表格里 200ms 的条目应从绿变黄。
 
 ### 验收
 
@@ -384,7 +390,7 @@ PRD §11「900ms 计丢包」全部打勾。
 ### 提交
 
 ```
-stage-2: treat >=900ms probes as packet loss; add monitor level helpers
+stage-2: treat >=900ms probes as packet loss; make latency thresholds configurable
 ```
 
 ---

@@ -545,6 +545,10 @@ msgstr "Κάντε κλικ σε ένα σύστημα για να δείτε π
 msgid "Click to copy"
 msgstr "Κάντε κλικ για αντιγραφή"
 
+#: src/components/routes/settings/general.tsx
+msgid "Color network monitor latency values by response time. These only affect colors; probes slower than the agent's loss threshold (900ms by default) are already counted as packet loss."
+msgstr ""
+
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/forgot-pass-form.tsx
 msgid "Command line instructions"
@@ -724,6 +728,10 @@ msgstr "Δημιουργήθηκε"
 msgid "Critical (%)"
 msgstr "Κρίσιμο (%)"
 
+#: src/components/routes/settings/general.tsx
+msgid "Critical (ms)"
+msgstr ""
+
 #: src/components/routes/system/disk-io-sheet.tsx
 msgid "Cumulative data read since boot"
 msgstr "Συνολικά δεδομένα που διαβάστηκαν από την εκκίνηση"
@@ -759,6 +767,12 @@ msgstr "Τρέχον"
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "Current state"
 msgstr "Τρέχουσα κατάσταση"
+
+#. placeholder {0}: monitorThresholds.warnMs
+#. placeholder {1}: monitorThresholds.critMs
+#: src/components/routes/settings/general.tsx
+msgid "Currently: {0} ms or less is green, up to {1} ms is yellow, anything slower is red."
+msgstr ""
 
 #. Power Cycles
 #: src/components/routes/system/smart-table.tsx
@@ -1413,6 +1427,10 @@ msgstr "Μοντέλο"
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitor"
 msgstr "Monitor"
+
+#: src/components/routes/settings/general.tsx
+msgid "Monitor thresholds"
+msgstr ""
 
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
@@ -2553,6 +2571,10 @@ msgstr "Επιθυμεί"
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"
 msgstr "Προειδοποίηση (%)"
+
+#: src/components/routes/settings/general.tsx
+msgid "Warning (ms)"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning thresholds"
