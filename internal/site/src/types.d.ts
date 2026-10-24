@@ -69,6 +69,10 @@ export interface SystemInfo {
 	b: number
 	/** bandwidth bytes */
 	bb?: number
+	/** upload bandwidth bytes/s (omitted by older agents) */
+	bu?: number
+	/** download bandwidth bytes/s (omitted by older agents) */
+	bd?: number
 	/** agent version */
 	v: string
 	/** agent can read the system journal */

@@ -270,6 +270,8 @@ func (a *Agent) getSystemStats(cacheTimeMs uint16) system.Stats {
 	a.systemInfo.Battery = systemStats.Battery
 	a.systemInfo.Uptime, _ = getUptime()
 	a.systemInfo.BandwidthBytes = systemStats.Bandwidth[0] + systemStats.Bandwidth[1]
+	a.systemInfo.BandwidthUp = systemStats.Bandwidth[0]
+	a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 	a.systemInfo.Threads = a.systemDetails.Threads
 
 	return systemStats

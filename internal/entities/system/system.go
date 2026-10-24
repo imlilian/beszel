@@ -187,6 +187,10 @@ type Info struct {
 	PackageUpdates []uint16           `json:"pu,omitempty" cbor:"25,keyasint,omitempty"`  // [totalUpdates, securityUpdates] (security omitted if unknown)
 	WiFi           map[string]WiFi    `json:"wf,omitempty" cbor:"26,keyasint,omitempty"`  // connected Wi-Fi interfaces
 	SystemdLogs    bool               `json:"jl,omitzero" cbor:"27,keyasint,omitempty"`   // agent can read the system journal
+	// BandwidthUp / BandwidthDown split the total in BandwidthBytes by direction.
+	// Omitted by agents older than the version that introduced them; the hub treats zero as "unknown".
+	BandwidthUp   uint64 `json:"bu,omitzero" cbor:"28,keyasint,omitzero"` // bytes/s, sent
+	BandwidthDown uint64 `json:"bd,omitzero" cbor:"29,keyasint,omitzero"` // bytes/s, recv
 }
 
 // Data that does not change during process lifetime and is not needed in All Systems table

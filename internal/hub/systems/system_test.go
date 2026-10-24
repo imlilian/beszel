@@ -4,10 +4,12 @@ package systems
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"testing"
 	"time"
 
+	"github.com/fxamacker/cbor/v2"
 	"github.com/henrygd/beszel/internal/common"
 	"github.com/henrygd/beszel/internal/entities/system"
 	"github.com/stretchr/testify/require"
@@ -300,4 +302,60 @@ func TestCreateRecordsSavesCpuSockets(t *testing.T) {
 	record, err := app.FindRecordById("system_details", sys.Id)
 	require.NoError(t, err)
 	require.Equal(t, 2, record.GetInt("sockets"))
+}
+
+// The split bandwidth fields travel over both CBOR (agent -> hub) and JSON (hub -> frontend),
+// so pin both encodings and the legacy payload that omits them.
+func TestInfoBandwidthRoundTrip(t *testing.T) {
+	newInfo := func() system.Info {
+		return system.Info{BandwidthBytes: 9000, BandwidthUp: 2000, BandwidthDown: 7000}
+	}
+
+	t.Run("cbor", func(t *testing.T) {
+		original := newInfo()
+		encoded, err := cbor.Marshal(original)
+		require.NoError(t, err)
+
+		var decoded system.Info
+		require.NoError(t, cbor.Unmarshal(encoded, &decoded))
+		require.Equal(t, original.BandwidthBytes, decoded.BandwidthBytes)
+		require.Equal(t, original.BandwidthUp, decoded.BandwidthUp)
+		require.Equal(t, original.BandwidthDown, decoded.BandwidthDown)
+
+		// Keys 28/29 are part of the agent <-> hub contract; renumbering breaks older hubs.
+		var raw map[int]any
+		require.NoError(t, cbor.Unmarshal(encoded, &raw))
+		require.EqualValues(t, 2000, raw[28])
+		require.EqualValues(t, 7000, raw[29])
+	})
+
+	t.Run("json", func(t *testing.T) {
+		original := newInfo()
+		encoded, err := json.Marshal(original)
+		require.NoError(t, err)
+		require.Contains(t, string(encoded), `"bu":2000`)
+		require.Contains(t, string(encoded), `"bd":7000`)
+
+		var decoded system.Info
+		require.NoError(t, json.Unmarshal(encoded, &decoded))
+		require.Equal(t, original, decoded)
+	})
+
+	t.Run("legacy agent payload without bu/bd", func(t *testing.T) {
+		var decoded system.Info
+		require.NoError(t, json.Unmarshal([]byte(`{"bb":9000}`), &decoded))
+		require.EqualValues(t, 9000, decoded.BandwidthBytes)
+		require.Zero(t, decoded.BandwidthUp)
+		require.Zero(t, decoded.BandwidthDown)
+
+		decoded = system.Info{}
+		encoded, err := cbor.Marshal(struct {
+			BB uint64 `cbor:"18,keyasint"`
+		}{BB: 9000})
+		require.NoError(t, err)
+		require.NoError(t, cbor.Unmarshal(encoded, &decoded))
+		require.EqualValues(t, 9000, decoded.BandwidthBytes)
+		require.Zero(t, decoded.BandwidthUp)
+		require.Zero(t, decoded.BandwidthDown)
+	})
 }

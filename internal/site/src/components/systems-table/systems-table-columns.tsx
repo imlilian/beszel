@@ -39,7 +39,7 @@ import {
 } from "@/lib/utils"
 import { batteryStateTranslations } from "@/lib/i18n"
 import { connectedWiFi, strongestWiFi, strongestWiFiSignal, wifiSignalState } from "@/lib/wifi"
-import type { SystemRecord, WiFi } from "@/types"
+import type { SystemInfo, SystemRecord, WiFi } from "@/types"
 import { SystemDialog } from "../add-system"
 import AlertButton from "../alerts/alert-button"
 import { $router, Link } from "../router"
@@ -93,6 +93,17 @@ function getUpdatesRank(pu: SystemRecord["info"]["pu"]): number {
 
 function getMeterStateByThresholds(value: number, warn = 65, crit = 90): MeterState {
 	return value >= crit ? MeterState.Crit : value >= warn ? MeterState.Warn : MeterState.Good
+}
+
+/**
+ * Older agents only report the combined value `bb`; newer ones also report `bu` / `bd`.
+ * A zero or missing pair means "direction unknown", so callers fall back to `bb`.
+ */
+export function getBandwidthParts(info: SystemInfo) {
+	if (info.bu || info.bd) {
+		return { up: info.bu ?? 0, down: info.bd ?? 0, combined: false as const }
+	}
+	return { up: info.bb ?? 0, down: null, combined: true as const }
 }
 
 /**
@@ -267,10 +278,33 @@ export function SystemsTableColumns(viewMode: "table" | "grid"): ColumnDef<Syste
 					return null
 				}
 				const userSettings = useStore($userSettings, { keys: ["unitNet"] })
-				const { value, unit } = formatBytes(val, true, userSettings.unitNet, false)
+				const parts = getBandwidthParts(info.row.original.info)
+				// Legacy agents only send the combined total: keep the original single-value rendering.
+				if (parts.combined) {
+					const { value, unit } = formatBytes(val, true, userSettings.unitNet, false)
+					return (
+						<span className="tabular-nums whitespace-nowrap">
+							{decimalString(value, value >= 100 ? 1 : 2)} {unit}
+						</span>
+					)
+				}
+				// Each direction is scaled independently, so units may differ between up and down.
+				const formatPart = (bytes: number) => {
+					const { value, unit } = formatBytes(bytes, true, userSettings.unitNet, false)
+					return `${decimalString(value, value >= 100 ? 1 : 2)} ${unit}`
+				}
+				if (viewMode === "table") {
+					return (
+						<span className="tabular-nums whitespace-nowrap">
+							↑{formatPart(parts.up)}
+							<span className="ms-1.5">↓{formatPart(parts.down)}</span>
+						</span>
+					)
+				}
 				return (
-					<span className="tabular-nums whitespace-nowrap">
-						{decimalString(value, value >= 100 ? 1 : 2)} {unit}
+					<span className="tabular-nums whitespace-nowrap flex flex-col leading-tight">
+						<span>↑{formatPart(parts.up)}</span>
+						<span>↓{formatPart(parts.down)}</span>
 					</span>
 				)
 			},
