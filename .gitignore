@@ -22,3 +22,6 @@ agent/lhm/bin
 dockerfile_agent_dev
 .cr-release-packages
 .tmp
+
+# agent workspace state
+.workbuddy
