@@ -120,6 +120,28 @@ func setCollectionAuthSettings(app core.App) error {
 		return err
 	}
 
+	// Billing config is normal user-editable metadata, so it follows the same
+	// system-scoped rules as network monitors (readonly users can only read).
+	if err := applyCollectionRules(app, []string{"system_billing"}, collectionRules{
+		list:   &systemScopedReadRule,
+		view:   &systemScopedReadRule,
+		create: &systemScopedWriteRule,
+		update: &systemScopedWriteRule,
+		delete: &systemScopedWriteRule,
+	}); err != nil {
+		return err
+	}
+
+	// Traffic counters are written by the hub only (server-side, bypassing rules).
+	// Leaving create/update/delete nil keeps the API read-only for everyone,
+	// and member reads are limited to their own systems.
+	if err := applyCollectionRules(app, []string{"system_traffic"}, collectionRules{
+		list: &systemScopedReadRule,
+		view: &systemScopedReadRule,
+	}); err != nil {
+		return err
+	}
+
 	// Alerts belong to their user and may only reference systems the user can access.
 	// The user and system of an existing alert cannot be changed through the API.
 	// Readonly users can still manage their own alerts, so these build on the read rule.
