@@ -83,6 +83,19 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 18. **P5：`AddCycle` 做了月末夹取**（1/31 + 1 月 = 2/28 或 2/29），计划的 `time.AddDate` 会溢出到 3/3，不符合"到期日"语义。
 19. **P5：`hub/billing` 超出计划范围加了 `Load` / `LoadTraffic` / `ParseCounters`**。阶段目标写了"能读"，P8 采样时直接复用，不必再写一遍记录→结构体映射。
 
+## 4.1 P6（计费前端）开工必读
+
+计划见 WORKPLAN「阶段 P6」，以下是计划里没写、但会直接踩到的点：
+
+1. **`SystemCard` 的渲染在 `useMemo` 里**（`systems-table.tsx` 末尾），直接在里面读 `$billingBySystemId.get()` 不会随数据到达而重渲染。必须在组件体内 `const billing = useStore($billingBySystemId)[system.id]`，并把它放进 `useMemo` 依赖（`ActionsButton` 同理，`billingOpen` 要进依赖）。
+2. **后端会拒绝非法组合**：`paid` + 非 `permanent` 且没填 `expiresAt` → 400（message 为 `ExpiresAt is required for a paid system that is not permanent.`）；`expiresAt <= paidAt` 也 400。表单必须把到期日设为必填，并把接口返回的 `message` 原样显示在 toast 里，不要笼统写"保存失败"。
+3. **PocketBase 拒绝写的状态码不统一**：create rule 拒绝是 400、update rule 拒绝是 404、rule 为 nil 才是 403。readonly 用户不该发请求（前端先 `isReadOnlyUser()` 禁用），但兜底提示别按 403 写。
+4. **`trafficAlerts` 的默认值 true 只能由前端提交**（后端 hook 无法区分"未提交"和显式 false，见偏差 17）。表单初始值记得给 `true`。
+5. **日期字符串**：PB 返回 `"2026-03-14 00:00:00.000Z"`（空格分隔）。`new Date()` 在 Chrome 能解析，Safari 不稳；统一用 `new Date(value.replace(" ", "T"))` 或直接 `Date.parse` 前先替换。
+6. **字节格式化直接复用 `lib/utils.ts::formatBytes`**（已有 `perSecond`/`unit` 参数），不要新写 `formatBytesIEC`；单位跟随 `$userSettings.unitNet` 与系统表 net 列保持一致。
+7. `@radix-ui/react-tabs` 在依赖里，但项目里目前没有封装好的 Tabs 组件（`components/ui/` 下无 tabs.tsx），要么直接用 Radix 原语，要么新增 `components/ui/tabs.tsx`（照抄 shadcn 写法）。
+8. 提交拆两步：`stage-6a` 数据层 + 纯函数 + 单测，`stage-6b` 对话框 + 卡片/表格展示。
+
 ## 5. 验证命令（Windows 实测可用）
 
 ```bash
