@@ -54,6 +54,8 @@ import AlertButton from "../alerts/alert-button"
 import { $router, Link } from "../router"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { SystemsTableColumns, ActionsButton, IndicatorDot } from "./systems-table-columns"
+import { BillingSummary } from "./billing-dialog"
+import { useBillingSync } from "@/lib/billing"
 
 type ViewMode = "table" | "grid"
 type StatusFilter = "all" | SystemRecord["status"]
@@ -81,9 +83,11 @@ export default function SystemsTable() {
 	)
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 	const { pagination, onPaginationChange, resetPageIndex } = usePagination()
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-		() => $userSettings.get().cols ?? JSON.parse(localStorage.getItem("besz-cols") || "{}")
-	)
+	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
+		const saved = $userSettings.get().cols ?? JSON.parse(localStorage.getItem("besz-cols") || "{}")
+		// The billing column is opt-in: hidden by default, but a stored preference wins.
+		return { ...saved, billing: saved.billing ?? false }
+	})
 
 	// Apply settings from server once they load (handles incognito / new devices)
 	const applied = useRef(new Set<string>())
@@ -156,6 +160,9 @@ export default function SystemsTable() {
 	)
 
 	const locale = i18n.locale
+
+	// Pull billing + traffic records once and keep them in sync (P6).
+	useBillingSync()
 
 	// Filter data based on status filter
 	const filteredData = useMemo(() => {
@@ -571,6 +578,7 @@ const SystemCard = memo(
 								)
 							})}
 						</div>
+						<BillingSummary systemId={system.id} />
 					</CardContent>
 					<Link
 						href={getPagePath($router, "system", { id: row.original.id })}

@@ -98,6 +98,11 @@ msgstr ""
 msgid "{daysLeft, plural, one {# day} other {# days}}"
 msgstr "{daysLeft, plural, other {#일}}"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "{daysLeft} days left"
+msgstr ""
+
 #: src/components/routes/system/charts/disk-charts.tsx
 msgid "{diskName} I/O"
 msgstr "{diskName} I/O"
@@ -125,6 +130,31 @@ msgstr "{totalCount, plural, other {서비스 #개}}"
 #: src/components/alerts-history-columns.tsx
 msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, other {# 일}}"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/2yr"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/3yr"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/6mo"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/mo"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/yr"
+msgstr ""
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -267,6 +297,10 @@ msgstr "모든 컨테이너"
 msgid "All Systems"
 msgstr "모든 시스템"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Annual"
+msgstr ""
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Are you sure you want to delete {name}?"
 msgstr "{name}을(를) 삭제하시겠습니까?"
@@ -396,6 +430,27 @@ msgstr "Beszel은 OpenID Connect 및 많은 OAuth2 인증 제공자를 지원합
 #: src/components/routes/settings/notifications.tsx
 msgid "Beszel uses <0>Shoutrrr</0> to integrate with popular notification services."
 msgstr "Beszel은 여러 인기 있는 알림 서비스와 연동하기 위해 <0>Shoutrrr</0>을 이용합니다."
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Biennial"
+msgstr ""
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Billing"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Billing & Traffic"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Billing cycle"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Billing type"
+msgstr ""
 
 #: src/components/add-system.tsx
 msgid "Binary"
@@ -703,6 +758,10 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "코어"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -785,6 +844,10 @@ msgstr "누적 업로드"
 msgid "Cumulative Write"
 msgstr "누적 쓰기"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Currency"
+msgstr ""
+
 #. Current package version
 #: src/components/routes/system/package-updates-table.tsx
 msgid "Current"
@@ -812,6 +875,10 @@ msgstr "사이클"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "매일"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "days before expiry"
+msgstr ""
 
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
@@ -1009,6 +1076,10 @@ msgstr "일시적"
 msgid "Error"
 msgstr "오류"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Estimate from cycle"
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Example:"
 msgstr "예시:"
@@ -1037,13 +1108,26 @@ msgstr "활성 종료됨"
 msgid "Expired"
 msgstr "만료됨"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "expired {daysAgo} days ago"
+msgstr ""
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Expires after one hour or on hub restart."
 msgstr "한 시간 후 또는 허브 재시작 시 만료됩니다."
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires at is required for a paid system that is not permanent."
+msgstr ""
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "<0>{value, plural, other {# 일}}</0> 이내 만료"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -1085,6 +1169,10 @@ msgstr "로그를 불러오지 못했습니다."
 #: src/components/routes/system/package-updates-table.tsx
 msgid "Failed to load package updates"
 msgstr "패키지 업데이트를 불러오지 못했습니다"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Failed to save billing settings. Please try again."
+msgstr ""
 
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1147,11 +1235,35 @@ msgstr "<0>{min}</0> {min, plural, one {분} other {분}} 동안"
 msgid "Forgot password?"
 msgstr "비밀번호를 잊으셨나요?"
 
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-free"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-type-free"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Free"
+#~ msgstr ""
+
 #: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/system/storage-pools-table.tsx
 msgctxt "Free space"
 msgid "Free"
 msgstr "여유 공간"
+
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-free-no-expiry"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Free — no expiry tracked"
+#~ msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1491,6 +1603,10 @@ msgstr ""
 msgid "Monitors created"
 msgstr "모니터가 생성되었습니다"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Monthly"
+msgstr ""
+
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "more monitors"
 msgstr ""
@@ -1615,6 +1731,10 @@ msgstr "알림"
 msgid "Notifications may include recent container log excerpts."
 msgstr "알림에는 최근 컨테이너 로그의 일부가 포함될 수 있습니다."
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Notify"
+msgstr ""
+
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDC 지원"
@@ -1708,6 +1828,14 @@ msgstr "{1}페이지 중 {0}페이지"
 msgid "Pages / Settings"
 msgstr "페이지 / 설정"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paid"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paid date"
+msgstr ""
+
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
 msgid "Password"
@@ -1769,6 +1897,9 @@ msgid "Percentage of time spent in each state"
 msgstr "각 상태에서 보낸 시간의 백분율"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Permanent"
 msgstr "영구적"
 
@@ -1844,6 +1975,10 @@ msgstr "기록된 시간의 정확한 사용량"
 #: src/components/routes/settings/general.tsx
 msgid "Preferred Language"
 msgstr "선호 언어"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Price"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Process started"
@@ -1937,9 +2072,17 @@ msgstr "필요한 대상"
 msgid "Requires"
 msgstr "필요 항목"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset day"
+msgstr ""
+
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
 msgstr "비밀번호 재설정"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets in {daysLeft} days"
+msgstr ""
 
 #: src/components/alerts-history-columns.tsx
 #: src/components/alerts-history-columns.tsx
@@ -2004,6 +2147,10 @@ msgstr "S.M.A.R.T. 세부 정보"
 msgid "S.M.A.R.T. Self-Test"
 msgstr "S.M.A.R.T. 자체 테스트"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Save"
+msgstr ""
+
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Save {foo}"
 msgstr "{foo} 저장"
@@ -2011,6 +2158,11 @@ msgstr "{foo} 저장"
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Enter 키 또는 쉼표를 사용하여 주소를 저장하세요. 이메일 알림을 비활성화하려면 비워 두세요."
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Save failed"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -2100,6 +2252,10 @@ msgstr "시스템 선택"
 msgid "Select targets"
 msgstr "대상 선택"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Semi-annual"
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Send a single heartbeat ping to verify your endpoint is working."
 msgstr "엔드포인트가 작동하는지 확인하기 위해 단일 하트비트 핑을 보냅니다."
@@ -2137,6 +2293,10 @@ msgstr "그래프 미터 색상의 백분율 임계값을 설정합니다."
 msgid "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
 msgstr "하트비트 모니터링을 활성화하려면 Beszel 허브에 다음 환경 변수를 설정하세요:"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Set to 0 for unlimited traffic (no card bar)."
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -2147,6 +2307,7 @@ msgid "Settings"
 msgstr "설정"
 
 #: src/components/routes/settings/layout.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Settings saved"
 msgstr "설정이 저장되었습니다."
 
@@ -2403,6 +2564,26 @@ msgstr "읽기/쓰기에 소요된 총 시간 (100%를 초과할 수 있음)"
 msgid "Total: {0}"
 msgstr "총: {0}"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic alerts"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic limit"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic mode"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Triennial"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
 msgstr "트리거 대상"
@@ -2490,6 +2671,10 @@ msgstr "유형"
 msgid "Unhealthy"
 msgstr "비정상"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Unit"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Unit 파일"
@@ -2558,6 +2743,14 @@ msgstr "업데이트"
 msgid "Upload"
 msgstr "업로드"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload + download"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload only"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Uptime"
@@ -2588,6 +2781,10 @@ msgstr "자체 서명 인증서에 사용하세요."
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Used"
 msgstr "사용됨"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {usedStr} / {limitStr}"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -2644,6 +2841,10 @@ msgstr "번역을 개선하는데 도움을 주시겠습니까? 자세한 내용
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Wants"
 msgstr "요구 항목"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Warn when usage passes the threshold."
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"

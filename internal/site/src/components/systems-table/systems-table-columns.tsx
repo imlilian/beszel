@@ -21,12 +21,15 @@ import {
 	ServerIcon,
 	TerminalSquareIcon,
 	Trash2Icon,
+	WalletIcon,
 	WifiIcon,
 } from "lucide-react"
 import { memo, useMemo, useRef, useState } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { isReadOnlyUser, pb } from "@/lib/api"
 import { BatteryState, ConnectionType, connectionTypeLabels, MeterState, SystemStatus } from "@/lib/enums"
+import { $billingBySystemId } from "@/lib/billing"
+import { BillingDialog, BillingSummary } from "./billing-dialog"
 import { $userSettings } from "@/lib/stores"
 import {
 	cn,
@@ -585,6 +588,19 @@ export function SystemsTableColumns(viewMode: "table" | "grid"): ColumnDef<Syste
 			},
 		},
 		{
+			id: "billing",
+			name: () => t`Billing`,
+			enableHiding: true,
+			size: 0,
+			hideSort: true,
+			cell: (info) => {
+				const system = info.row.original
+				const billing = useStore($billingBySystemId)[system.id]
+				if (!billing) return null
+				return <BillingSummary systemId={system.id} />
+			},
+		},
+		{
 			id: "actions",
 			// @ts-expect-error
 			name: () => t({ message: "Actions", comment: "Table column" }),
@@ -761,6 +777,7 @@ export function IndicatorDot({ system, className }: { system: SystemRecord; clas
 export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [editOpen, setEditOpen] = useState(false)
+	const [billingOpen, setBillingOpen] = useState(false)
 	const editOpened = useRef(false)
 	const { t } = useLingui()
 	const { id, status, host, name } = system
@@ -789,6 +806,15 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 								<Trans>Edit</Trans>
 							</DropdownMenuItem>
 						)}
+						<DropdownMenuItem
+							onSelect={(e) => {
+								e.preventDefault()
+								setBillingOpen(true)
+							}}
+						>
+							<WalletIcon className="me-2.5 size-4" />
+							<Trans>Billing & Traffic</Trans>
+						</DropdownMenuItem>
 						<DropdownMenuItem
 							className={cn(isReadOnlyUser() && "hidden")}
 							onClick={() => {
@@ -828,6 +854,8 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 				<Dialog open={editOpen} onOpenChange={setEditOpen}>
 					{editOpened.current && <SystemDialog system={system} setOpen={setEditOpen} />}
 				</Dialog>
+				{/* billing & traffic dialog */}
+				<BillingDialog system={system} open={billingOpen} onOpenChange={setBillingOpen} />
 				{/* deletion dialog */}
 				<AlertDialog open={deleteOpen} onOpenChange={(open) => setDeleteOpen(open)}>
 					<AlertDialogContent>
@@ -857,5 +885,5 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 				</AlertDialog>
 			</>
 		)
-	}, [id, status, host, name, system, t, deleteOpen, editOpen])
+	}, [id, status, host, name, system, t, deleteOpen, editOpen, billingOpen])
 })

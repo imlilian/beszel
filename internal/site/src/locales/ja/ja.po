@@ -98,6 +98,11 @@ msgstr ""
 msgid "{daysLeft, plural, one {# day} other {# days}}"
 msgstr "{daysLeft, plural, one {# 日} other {# 日}}"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "{daysLeft} days left"
+msgstr ""
+
 #: src/components/routes/system/charts/disk-charts.tsx
 msgid "{diskName} I/O"
 msgstr "{diskName} の I/O"
@@ -125,6 +130,31 @@ msgstr "{totalCount, plural, one {# サービス} other {# サービス}}"
 #: src/components/alerts-history-columns.tsx
 msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, other {# 日}}"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/2yr"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/3yr"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/6mo"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/mo"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/yr"
+msgstr ""
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -267,6 +297,10 @@ msgstr "すべてのコンテナ"
 msgid "All Systems"
 msgstr "すべてのシステム"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Annual"
+msgstr ""
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Are you sure you want to delete {name}?"
 msgstr "{name}を削除してもよろしいですか？"
@@ -396,6 +430,27 @@ msgstr "BeszelはOpenID Connectと多くのOAuth2認証プロバイダーをサ�
 #: src/components/routes/settings/notifications.tsx
 msgid "Beszel uses <0>Shoutrrr</0> to integrate with popular notification services."
 msgstr "Beszelは<0>Shoutrrr</0>を使用して、人気のある通知サービスと統合します。"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Biennial"
+msgstr ""
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Billing"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Billing & Traffic"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Billing cycle"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Billing type"
+msgstr ""
 
 #: src/components/add-system.tsx
 msgid "Binary"
@@ -703,6 +758,10 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "コア"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost"
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -785,6 +844,10 @@ msgstr "累積アップロード"
 msgid "Cumulative Write"
 msgstr "累積書き込み"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Currency"
+msgstr ""
+
 #. Current package version
 #: src/components/routes/system/package-updates-table.tsx
 msgid "Current"
@@ -812,6 +875,10 @@ msgstr "サイクル"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "毎日"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "days before expiry"
+msgstr ""
 
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
@@ -1009,6 +1076,10 @@ msgstr "一時的"
 msgid "Error"
 msgstr "エラー"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Estimate from cycle"
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Example:"
 msgstr "例:"
@@ -1037,13 +1108,26 @@ msgstr "アクティブ状態で終了"
 msgid "Expired"
 msgstr "期限切れ"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "expired {daysAgo} days ago"
+msgstr ""
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Expires after one hour or on hub restart."
 msgstr "1時間後、またはハブの再起動時に有効期限が切れます。"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires at is required for a paid system that is not permanent."
+msgstr ""
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "<0>{value, plural, other {# 日}}</0>以内に期限切れ"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date"
+msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -1085,6 +1169,10 @@ msgstr "ログの読み込みに失敗しました。"
 #: src/components/routes/system/package-updates-table.tsx
 msgid "Failed to load package updates"
 msgstr "パッケージの更新の読み込みに失敗しました"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Failed to save billing settings. Please try again."
+msgstr ""
 
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1147,11 +1235,35 @@ msgstr "<0>{min}</0> {min, plural, one {分} other {分}}の間"
 msgid "Forgot password?"
 msgstr "パスワードをお忘れですか？"
 
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-free"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-type-free"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Free"
+#~ msgstr ""
+
 #: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/system/storage-pools-table.tsx
 msgctxt "Free space"
 msgid "Free"
 msgstr "空き"
+
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-free-no-expiry"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Free — no expiry tracked"
+#~ msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1491,6 +1603,10 @@ msgstr ""
 msgid "Monitors created"
 msgstr "モニターを作成しました"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Monthly"
+msgstr ""
+
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "more monitors"
 msgstr ""
@@ -1615,6 +1731,10 @@ msgstr "通知"
 msgid "Notifications may include recent container log excerpts."
 msgstr "通知には、最近のコンテナログの抜粋が含まれる場合があります。"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Notify"
+msgstr ""
+
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDCサポート"
@@ -1708,6 +1828,14 @@ msgstr "{1}ページ中{0}ページ目"
 msgid "Pages / Settings"
 msgstr "ページ / 設定"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paid"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paid date"
+msgstr ""
+
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
 msgid "Password"
@@ -1769,6 +1897,9 @@ msgid "Percentage of time spent in each state"
 msgstr "各状態で費やした時間の割合"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Permanent"
 msgstr "永久"
 
@@ -1844,6 +1975,10 @@ msgstr "記録された時点での正確な利用"
 #: src/components/routes/settings/general.tsx
 msgid "Preferred Language"
 msgstr "優先言語"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Price"
+msgstr ""
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Process started"
@@ -1937,9 +2072,17 @@ msgstr "必要とされる"
 msgid "Requires"
 msgstr "必要とする"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset day"
+msgstr ""
+
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
 msgstr "パスワードをリセット"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets in {daysLeft} days"
+msgstr ""
 
 #: src/components/alerts-history-columns.tsx
 #: src/components/alerts-history-columns.tsx
@@ -2004,6 +2147,10 @@ msgstr "S.M.A.R.T.詳細"
 msgid "S.M.A.R.T. Self-Test"
 msgstr "S.M.A.R.T.セルフテスト"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Save"
+msgstr ""
+
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Save {foo}"
 msgstr "{foo} を保存"
@@ -2011,6 +2158,11 @@ msgstr "{foo} を保存"
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Enterキーまたはカンマを使用してアドレスを保存します。空白のままにするとメール通知が無効になります。"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Save failed"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -2100,6 +2252,10 @@ msgstr "システムを選択"
 msgid "Select targets"
 msgstr "ターゲットを選択"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Semi-annual"
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Send a single heartbeat ping to verify your endpoint is working."
 msgstr "エンドポイントが機能していることを確認するために、単一のハートビート ping を送信します。"
@@ -2137,6 +2293,10 @@ msgstr "メーターの色を変更するしきい値（パーセンテージ）
 msgid "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
 msgstr "ハートビート監視を有効にするには、Beszel ハブで次の環境変数を設定します。"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Set to 0 for unlimited traffic (no card bar)."
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -2147,6 +2307,7 @@ msgid "Settings"
 msgstr "設定"
 
 #: src/components/routes/settings/layout.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Settings saved"
 msgstr "設定が保存されました"
 
@@ -2403,6 +2564,26 @@ msgstr "読み取り/書き込みに費やした合計時間 (100% を超える�
 msgid "Total: {0}"
 msgstr "合計: {0}"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic alerts"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic limit"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic mode"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Triennial"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
 msgstr "トリガー元"
@@ -2490,6 +2671,10 @@ msgstr "タイプ"
 msgid "Unhealthy"
 msgstr "異常"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Unit"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "ユニットファイル"
@@ -2558,6 +2743,14 @@ msgstr "更新"
 msgid "Upload"
 msgstr "アップロード"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload + download"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload only"
+msgstr ""
+
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Uptime"
@@ -2588,6 +2781,10 @@ msgstr "自己署名証明書に使用します。"
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Used"
 msgstr "使用中"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {usedStr} / {limitStr}"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -2644,6 +2841,10 @@ msgstr "翻訳をさらに良くするためにご協力をお願いします。
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Wants"
 msgstr "要求"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Warn when usage passes the threshold."
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"

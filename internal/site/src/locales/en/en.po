@@ -93,6 +93,11 @@ msgstr "{count} warning"
 msgid "{daysLeft, plural, one {# day} other {# days}}"
 msgstr "{daysLeft, plural, one {# day} other {# days}}"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "{daysLeft} days left"
+msgstr "{daysLeft} days left"
+
 #: src/components/routes/system/charts/disk-charts.tsx
 msgid "{diskName} I/O"
 msgstr "{diskName} I/O"
@@ -120,6 +125,31 @@ msgstr "{totalCount, plural, one {# service} other {# services}}"
 #: src/components/alerts-history-columns.tsx
 msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, one {# day} other {# days}}"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/2yr"
+msgstr "/2yr"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/3yr"
+msgstr "/3yr"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/6mo"
+msgstr "/6mo"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/mo"
+msgstr "/mo"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "/yr"
+msgstr "/yr"
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -262,6 +292,10 @@ msgstr "All Containers"
 msgid "All Systems"
 msgstr "All Systems"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Annual"
+msgstr "Annual"
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Are you sure you want to delete {name}?"
 msgstr "Are you sure you want to delete {name}?"
@@ -391,6 +425,27 @@ msgstr "Beszel supports OpenID Connect and many OAuth2 authentication providers.
 #: src/components/routes/settings/notifications.tsx
 msgid "Beszel uses <0>Shoutrrr</0> to integrate with popular notification services."
 msgstr "Beszel uses <0>Shoutrrr</0> to integrate with popular notification services."
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Biennial"
+msgstr "Biennial"
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Billing"
+msgstr "Billing"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Billing & Traffic"
+msgstr "Billing & Traffic"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Billing cycle"
+msgstr "Billing cycle"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Billing type"
+msgstr "Billing type"
 
 #: src/components/add-system.tsx
 msgid "Binary"
@@ -698,6 +753,10 @@ msgctxt "Core system metrics"
 msgid "Core"
 msgstr "Core"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost"
+msgstr "Cost"
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -780,6 +839,10 @@ msgstr "Cumulative Upload"
 msgid "Cumulative Write"
 msgstr "Cumulative Write"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Currency"
+msgstr "Currency"
+
 #. Current package version
 #: src/components/routes/system/package-updates-table.tsx
 msgid "Current"
@@ -807,6 +870,10 @@ msgstr "Cycles"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Daily"
 msgstr "Daily"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "days before expiry"
+msgstr "days before expiry"
 
 #: src/components/routes/system/info-bar.tsx
 msgctxt "Default system layout option"
@@ -1004,6 +1071,10 @@ msgstr "Ephemeral"
 msgid "Error"
 msgstr "Error"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Estimate from cycle"
+msgstr "Estimate from cycle"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Example:"
 msgstr "Example:"
@@ -1032,13 +1103,26 @@ msgstr "Exited active"
 msgid "Expired"
 msgstr "Expired"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "expired {daysAgo} days ago"
+msgstr "expired {daysAgo} days ago"
+
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Expires after one hour or on hub restart."
 msgstr "Expires after one hour or on hub restart."
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires at is required for a paid system that is not permanent."
+msgstr "Expires at is required for a paid system that is not permanent."
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date"
+msgstr "Expiry date"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -1080,6 +1164,10 @@ msgstr "Failed to load logs."
 #: src/components/routes/system/package-updates-table.tsx
 msgid "Failed to load package updates"
 msgstr "Failed to load package updates"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Failed to save billing settings. Please try again."
+msgstr "Failed to save billing settings. Please try again."
 
 #: src/components/routes/settings/layout.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -1142,11 +1230,35 @@ msgstr "For <0>{min}</0> {min, plural, one {minute} other {minutes}}"
 msgid "Forgot password?"
 msgstr "Forgot password?"
 
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-free"
+msgstr "Free"
+
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-type-free"
+msgstr "Free"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Free"
+#~ msgstr "Free"
+
 #: src/components/routes/system/storage-pools-table.tsx
 #: src/components/routes/system/storage-pools-table.tsx
 msgctxt "Free space"
 msgid "Free"
 msgstr "Free"
+
+#. js-lingui-explicit-id
+#: src/components/systems-table/billing-dialog.tsx
+msgid "billing-free-no-expiry"
+msgstr "Free — no expiry tracked"
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Free — no expiry tracked"
+#~ msgstr "Free — no expiry tracked"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1486,6 +1598,10 @@ msgstr "Monitor thresholds"
 msgid "Monitors created"
 msgstr "Monitors created"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Monthly"
+msgstr "Monthly"
+
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "more monitors"
 msgstr "more monitors"
@@ -1610,6 +1726,10 @@ msgstr "Notifications"
 msgid "Notifications may include recent container log excerpts."
 msgstr "Notifications may include recent container log excerpts."
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Notify"
+msgstr "Notify"
+
 #: src/components/login/auth-form.tsx
 msgid "OAuth 2 / OIDC support"
 msgstr "OAuth 2 / OIDC support"
@@ -1703,6 +1823,14 @@ msgstr "Page {0} of {1}"
 msgid "Pages / Settings"
 msgstr "Pages / Settings"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paid"
+msgstr "Paid"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paid date"
+msgstr "Paid date"
+
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
 msgid "Password"
@@ -1764,6 +1892,9 @@ msgid "Percentage of time spent in each state"
 msgstr "Percentage of time spent in each state"
 
 #: src/components/routes/settings/tokens-fingerprints.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Permanent"
 msgstr "Permanent"
 
@@ -1839,6 +1970,10 @@ msgstr "Precise utilization at the recorded time"
 #: src/components/routes/settings/general.tsx
 msgid "Preferred Language"
 msgstr "Preferred Language"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Price"
+msgstr "Price"
 
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Process started"
@@ -1932,9 +2067,17 @@ msgstr "Required by"
 msgid "Requires"
 msgstr "Requires"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset day"
+msgstr "Reset day"
+
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
 msgstr "Reset Password"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets in {daysLeft} days"
+msgstr "resets in {daysLeft} days"
 
 #: src/components/alerts-history-columns.tsx
 #: src/components/alerts-history-columns.tsx
@@ -1999,6 +2142,10 @@ msgstr "S.M.A.R.T. Details"
 msgid "S.M.A.R.T. Self-Test"
 msgstr "S.M.A.R.T. Self-Test"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Save"
+msgstr "Save"
+
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Save {foo}"
 msgstr "Save {foo}"
@@ -2006,6 +2153,11 @@ msgstr "Save {foo}"
 #: src/components/routes/settings/notifications.tsx
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Save address using enter key or comma. Leave blank to disable email notifications."
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Save failed"
+msgstr "Save failed"
 
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -2095,6 +2247,10 @@ msgstr "Select systems"
 msgid "Select targets"
 msgstr "Select targets"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Semi-annual"
+msgstr "Semi-annual"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "Send a single heartbeat ping to verify your endpoint is working."
 msgstr "Send a single heartbeat ping to verify your endpoint is working."
@@ -2132,6 +2288,10 @@ msgstr "Set percentage thresholds for meter colors."
 msgid "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
 msgstr "Set the following environment variables on your Beszel hub to enable heartbeat monitoring:"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Set to 0 for unlimited traffic (no card bar)."
+msgstr "Set to 0 for unlimited traffic (no card bar)."
+
 #: src/components/command-palette.tsx
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -2142,6 +2302,7 @@ msgid "Settings"
 msgstr "Settings"
 
 #: src/components/routes/settings/layout.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Settings saved"
 msgstr "Settings saved"
 
@@ -2398,6 +2559,26 @@ msgstr "Total time spent on read/write (can exceed 100%)"
 msgid "Total: {0}"
 msgstr "Total: {0}"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic"
+msgstr "Traffic"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic alerts"
+msgstr "Traffic alerts"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic limit"
+msgstr "Traffic limit"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic mode"
+msgstr "Traffic mode"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Triennial"
+msgstr "Triennial"
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Triggered by"
 msgstr "Triggered by"
@@ -2485,6 +2666,10 @@ msgstr "Type"
 msgid "Unhealthy"
 msgstr "Unhealthy"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Unit"
+msgstr "Unit"
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Unit file"
@@ -2553,6 +2738,14 @@ msgstr "Updates"
 msgid "Upload"
 msgstr "Upload"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload + download"
+msgstr "Upload + download"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload only"
+msgstr "Upload only"
+
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Uptime"
@@ -2583,6 +2776,10 @@ msgstr "Use for self-signed certificates."
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Used"
 msgstr "Used"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {usedStr} / {limitStr}"
+msgstr "Used {usedStr} / {limitStr}"
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
@@ -2639,6 +2836,10 @@ msgstr "Want to help improve our translations? Check <0>Crowdin</0> for details.
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Wants"
 msgstr "Wants"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Warn when usage passes the threshold."
+msgstr "Warn when usage passes the threshold."
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"
