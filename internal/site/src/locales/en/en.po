@@ -127,26 +127,21 @@ msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, one {# day} other {# days}}"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/2yr"
 msgstr "/2yr"
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/3yr"
 msgstr "/3yr"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/6mo"
 msgstr "/6mo"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/mo"
 msgstr "/mo"
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/yr"
 msgstr "/yr"
@@ -757,6 +752,10 @@ msgstr "Core"
 msgid "Cost"
 msgstr "Cost"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost and traffic quota for {systemName}."
+msgstr "Cost and traffic quota for {systemName}."
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1116,6 +1115,11 @@ msgstr "Expires after one hour or on hub restart."
 msgid "Expires at is required for a paid system that is not permanent."
 msgstr "Expires at is required for a paid system that is not permanent."
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires today"
+msgstr "Expires today"
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
@@ -1123,6 +1127,10 @@ msgstr "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Expiry date"
 msgstr "Expiry date"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date must be after the paid date."
+msgstr "Expiry date must be after the paid date."
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -2051,6 +2059,10 @@ msgstr "Refresh"
 msgid "Relationships"
 msgstr "Relationships"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reminders use your notification settings (email / webhook)."
+msgstr "Reminders use your notification settings (email / webhook)."
+
 #: src/components/login/login.tsx
 msgid "Request a one-time password"
 msgstr "Request a one-time password"
@@ -2154,6 +2166,7 @@ msgstr "Save {foo}"
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Save address using enter key or comma. Leave blank to disable email notifications."
 
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Save failed"

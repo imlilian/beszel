@@ -10,6 +10,7 @@
 export type Currency = "CNY" | "USD" | "EUR" | "GBP"
 export type Cycle = "monthly" | "semiannual" | "annual" | "biennial" | "triennial" | "permanent"
 export type TrafficMode = "sum" | "upload"
+export type BillingType = "free" | "paid"
 
 /** Currency glyphs are locale-independent, so they live here. */
 export const CURRENCY_SYMBOL: Record<Currency, string> = {
@@ -17,24 +18,6 @@ export const CURRENCY_SYMBOL: Record<Currency, string> = {
 	USD: "$",
 	EUR: "€",
 	GBP: "£",
-}
-
-/** Neutral short cycle label (e.g. `/mo`). The localized version is built in the component. */
-export function formatCycleShort(cycle: Cycle): string {
-	switch (cycle) {
-		case "monthly":
-			return "/mo"
-		case "semiannual":
-			return "/6mo"
-		case "annual":
-			return "/yr"
-		case "biennial":
-			return "/2yr"
-		case "triennial":
-			return "/3yr"
-		case "permanent":
-			return ""
-	}
 }
 
 /** `25 -> "¥25"`, `25.5 -> "¥25.50"`. Integers drop decimals; non-integers keep two. */
@@ -46,17 +29,20 @@ export function formatPrice(price: number, currency: Currency): string {
 }
 
 /**
- * Whole calendar days from "today 00:00" to "target 00:00" (UTC day boundaries),
- * mirroring the Go `DaysUntilExpiry` arithmetic so a DST change can never shave
- * a day off. Negative means the target is in the past. A non-positive target
- * returns 0 (callers must check the source value first).
+ * Whole calendar days from "today 00:00" to "target 00:00" (local day
+ * boundaries), mirroring the Go `DaysUntilExpiry` arithmetic so a DST change
+ * can never shave a day off. Negative means the target is in the past. A
+ * non-positive target returns 0 (callers must check the source value first).
+ *
+ * Both sides use the *local* calendar day, matching Go, which reduces `now`
+ * and the expiry instant to their local Y/M/D before differencing in UTC.
  */
 export function daysUntilExpiry(targetMs: number, now: number = Date.now()): number {
 	if (targetMs <= 0) return 0
 	const n = new Date(now)
 	const t = new Date(targetMs)
 	const today = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())
-	const targetDay = Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate())
+	const targetDay = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate())
 	return Math.round((targetDay - today) / 86_400_000)
 }
 
@@ -66,14 +52,15 @@ export type ExpiryState = {
 }
 
 /**
- * Classify an expiry timestamp. `free` / `permanent` are decided by the caller
- * (they depend on billingType / cycle, which this function does not receive);
- * a zero timestamp means "no expiry tracked" (`kind: "none"`, no `daysLeft`).
+ * Classify an expiry timestamp relative to the calendar day. A zero timestamp
+ * means "no expiry tracked" (`kind: "none"`). The expiry day itself is
+ * `active` with `daysLeft: 0` ("expires today"); only days strictly in the past
+ * are `expired`.
  */
 export function getExpiryState(expiresAtMs: number, now: number = Date.now()): ExpiryState {
 	if (!expiresAtMs || expiresAtMs <= 0) return { kind: "none" }
 	const daysLeft = daysUntilExpiry(expiresAtMs, now)
-	if (daysLeft <= 0) return { kind: "expired", daysLeft }
+	if (daysLeft < 0) return { kind: "expired", daysLeft }
 	return { kind: "active", daysLeft }
 }
 
@@ -82,6 +69,32 @@ export function getExpirySeverity(daysLeft: number): "ok" | "warn" | "crit" {
 	if (daysLeft >= 30) return "ok"
 	if (daysLeft >= 7) return "warn"
 	return "crit"
+}
+
+/**
+ * Full expiry classification for a billing record, including the `free` and
+ * `permanent` cases that `getExpiryState` deliberately leaves to the caller.
+ * This is the single source of truth used by both the card summary and the
+ * dialog preview.
+ */
+export type BillingExpiryState =
+	| { kind: "free" }
+	| { kind: "permanent" }
+	| { kind: "none" }
+	| { kind: "active"; daysLeft: number }
+	| { kind: "expired"; daysLeft: number }
+
+export function getBillingExpiryState(
+	billingType: BillingType,
+	cycle: Cycle,
+	expiresAtMs: number,
+	now: number = Date.now()
+): BillingExpiryState {
+	if (billingType === "free") return { kind: "free" }
+	if (cycle === "permanent") return { kind: "permanent" }
+	const state = getExpiryState(expiresAtMs, now)
+	if (state.kind === "none") return { kind: "none" }
+	return { kind: state.kind, daysLeft: state.daysLeft ?? 0 }
 }
 
 export interface TrafficState {

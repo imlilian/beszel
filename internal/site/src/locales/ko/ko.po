@@ -132,26 +132,21 @@ msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, other {# 일}}"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/2yr"
 msgstr ""
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/3yr"
 msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/6mo"
 msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/mo"
 msgstr ""
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/yr"
 msgstr ""
@@ -762,6 +757,10 @@ msgstr "코어"
 msgid "Cost"
 msgstr ""
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost and traffic quota for {systemName}."
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1121,12 +1120,21 @@ msgstr "한 시간 후 또는 허브 재시작 시 만료됩니다."
 msgid "Expires at is required for a paid system that is not permanent."
 msgstr ""
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires today"
+msgstr ""
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "<0>{value, plural, other {# 일}}</0> 이내 만료"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Expiry date"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date must be after the paid date."
 msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -2056,6 +2064,10 @@ msgstr "새로고침"
 msgid "Relationships"
 msgstr "관계"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reminders use your notification settings (email / webhook)."
+msgstr ""
+
 #: src/components/login/login.tsx
 msgid "Request a one-time password"
 msgstr "OTP 요청"
@@ -2159,6 +2171,7 @@ msgstr "{foo} 저장"
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Enter 키 또는 쉼표를 사용하여 주소를 저장하세요. 이메일 알림을 비활성화하려면 비워 두세요."
 
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Save failed"

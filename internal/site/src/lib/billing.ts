@@ -2,11 +2,11 @@ import { atom } from "nanostores"
 import { useEffect } from "react"
 import type { RecordModel } from "pocketbase"
 import { pb } from "@/lib/api"
+import type { BillingType, Currency, Cycle, TrafficMode } from "@/lib/billing-utils"
 
-export type Currency = "CNY" | "USD" | "EUR" | "GBP"
-export type Cycle = "monthly" | "semiannual" | "annual" | "biennial" | "triennial" | "permanent"
-export type TrafficMode = "sum" | "upload"
-export type BillingType = "free" | "paid"
+// Types are defined once in billing-utils (the pure, test-friendly module) and
+// re-exported here so components can import everything from "@/lib/billing".
+export type { BillingType, Currency, Cycle, TrafficMode } from "@/lib/billing-utils"
 
 /** Typed view of a `system_billing` record (cost + traffic-quota config). */
 export interface BillingRecord extends RecordModel {
@@ -35,8 +35,10 @@ export interface TrafficRecord extends RecordModel {
 	periodEnd: string
 	usedUpload: number
 	usedDownload: number
-	lastCounters: Record<string, [number, number]>
-	lastSampleAt: string
+	/** Excluded from TRAFFIC_FIELDS (a per-interface counters blob); absent in UI reads. */
+	lastCounters?: Record<string, [number, number]>
+	/** Excluded from TRAFFIC_FIELDS; absent in UI reads. */
+	lastSampleAt?: string
 	lastResetAt: string
 	resetReason: string
 }
@@ -46,9 +48,12 @@ export const $billingBySystemId = atom<Record<string, BillingRecord>>({})
 /** systemId -> traffic counters. Empty until useBillingSync() runs. */
 export const $trafficBySystemId = atom<Record<string, TrafficRecord>>({})
 
-// Only the fields the UI actually reads; keeps payloads small.
+// The UI reads the cost/traffic fields; the reminder bookkeeping is cheap and
+// kept so the BillingRecord type stays honest for every fetched record.
 const BILLING_FIELDS =
 	"system,billingType,price,currency,cycle,paidAt,expiresAt,notifyDaysBefore,remindLevel,remindAt,trafficLimit,trafficMode,resetDay,trafficAlerts,trafficRemindLevel,manualResetAt"
+// `lastCounters` (per-interface blob) and `lastSampleAt` are intentionally not
+// fetched; they are optional on TrafficRecord and unused by the UI.
 const TRAFFIC_FIELDS = "system,periodStart,periodEnd,usedUpload,usedDownload,lastResetAt,resetReason"
 
 /**

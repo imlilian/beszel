@@ -25,8 +25,8 @@ import {
 	addCycle,
 	formatPrice,
 	fromDateInputValue,
+	getBillingExpiryState,
 	getExpirySeverity,
-	getExpiryState,
 	getTrafficState,
 	parsePbDate,
 	toDateInputValue,
@@ -43,66 +43,79 @@ function expirySeverityClass(sev: "ok" | "warn" | "crit"): string {
 	return sev === "crit" ? "text-red-500" : sev === "warn" ? "text-yellow-500" : "text-muted-foreground"
 }
 
+/** Localized short cycle suffix (`/mo`, `/yr`, ...). Shared by the summary and the dialog preview. */
+function CycleSuffix({ cycle }: { cycle: Cycle }) {
+	const { t } = useLingui()
+	switch (cycle) {
+		case "monthly":
+			return <>{t`/mo`}</>
+		case "semiannual":
+			return <>{t`/6mo`}</>
+		case "annual":
+			return <>{t`/yr`}</>
+		case "biennial":
+			return <>{t`/2yr`}</>
+		case "triennial":
+			return <>{t`/3yr`}</>
+		case "permanent":
+			return null
+		default:
+			return null
+	}
+}
+
 /* ------------------------------------------------------------------ */
 /* Card summary + traffic bar                                          */
 /* ------------------------------------------------------------------ */
 
-/** Compact billing line shown under a system card (and in the table column). Renders nothing without a billing record. */
-export function BillingSummary({ systemId }: { systemId: string }) {
+/**
+ * Compact billing line shown under a system card and in the table column.
+ * Renders nothing without a billing record, so both callers can mount it
+ * unconditionally and let it decide (and subscribe) on its own.
+ *
+ * `bordered` keeps the card's top divider; the table cell passes `false` to
+ * avoid a redundant line on top of the cell separator.
+ */
+export function BillingSummary({ systemId, bordered = true }: { systemId: string; bordered?: boolean }) {
 	const { t } = useLingui()
 	const billing = useStore($billingBySystemId)[systemId]
 	const traffic = useStore($trafficBySystemId)[systemId]
 	if (!billing) return null
 
-	let cycleLabel = ""
-	switch (billing.cycle) {
-		case "monthly":
-			cycleLabel = t`/mo`
-			break
-		case "semiannual":
-			cycleLabel = t`/6mo`
-			break
-		case "annual":
-			cycleLabel = t`/yr`
-			break
-		case "biennial":
-			cycleLabel = t`/2yr`
-			break
-		case "triennial":
-			cycleLabel = t`/3yr`
-			break
-		case "permanent":
-			cycleLabel = ""
-			break
-	}
-
-	const priceText =
-		billing.billingType === "free"
-			? t({ id: "billing-free", message: "Free" })
-			: `${formatPrice(billing.price, billing.currency)}${cycleLabel}`
-
+	const state = getBillingExpiryState(billing.billingType, billing.cycle, parsePbDate(billing.expiresAt))
 	let expiryText: string | null = null
 	let severityClass = "text-muted-foreground"
-	if (billing.billingType !== "free" && billing.cycle === "permanent") {
+	if (state.kind === "permanent") {
 		expiryText = t`Permanent`
-	} else if (billing.billingType !== "free") {
-		const exp = getExpiryState(parsePbDate(billing.expiresAt))
-		if (exp.kind === "active" && exp.daysLeft != null) {
-			const daysLeft = exp.daysLeft
+	} else if (state.kind === "active") {
+		const daysLeft = state.daysLeft
+		if (daysLeft === 0) {
+			expiryText = t`Expires today`
+			severityClass = "text-red-500"
+		} else {
 			expiryText = t`${daysLeft} days left`
 			severityClass = expirySeverityClass(getExpirySeverity(daysLeft))
-		} else if (exp.kind === "expired" && exp.daysLeft != null) {
-			const daysAgo = Math.abs(exp.daysLeft)
-			expiryText = t`expired ${daysAgo} days ago`
-			severityClass = "text-red-500"
 		}
+	} else if (state.kind === "expired") {
+		const daysAgo = Math.abs(state.daysLeft)
+		expiryText = t`expired ${daysAgo} days ago`
+		severityClass = "text-red-500"
 	}
 
 	return (
-		<div className="flex flex-col gap-1.5 border-t pt-2 text-xs">
+		<div className={cn("flex flex-col gap-1.5 text-xs", bordered && "border-t pt-2")}>
 			<div className="flex items-center gap-1.5">
 				<WalletIcon className="size-3.5 text-muted-foreground" />
-				<span className={severityClass}>{priceText}</span>
+				<span className={severityClass}>
+					{billing.billingType === "free" ? (
+						t({ id: "billing-free", message: "Free" })
+					) : (
+						<>
+							{formatPrice(billing.price, billing.currency)}
+							<CycleSuffix cycle={billing.cycle} />
+						</>
+					)}
+				</span>
 				{expiryText && (
 					<>
 						<span className="text-muted-foreground">·</span>
@@ -222,6 +235,7 @@ export function BillingDialog({
 	const isFree = form.billingType === "free"
 	const isPermanent = form.cycle === "permanent"
 	const expiresRequired = !isFree && !isPermanent
+	const systemName = system.name
 
 	const estimateExpiry = () => {
 		if (!form.paidAt || isPermanent) return
@@ -233,10 +247,13 @@ export function BillingDialog({
 	}
 
 	const handleUnitChange = (unit: TrafficUnit) => {
-		// keep the displayed number consistent when switching GB <-> TB
+		if (unit === form.trafficUnit) return
+		// Keep the byte value stable while switching the displayed unit; trim the
+		// long float tail so the input doesn't show e.g. 0.0009765625.
 		const bytes = toBytes(form.trafficLimit, form.trafficUnit)
+		const factor = unit === "TB" ? TB : GB
 		set("trafficUnit", unit)
-		set("trafficLimit", String(bytes / (unit === "TB" ? TB : GB)))
+		set("trafficLimit", String(Number((bytes / factor).toFixed(6))))
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -249,6 +266,14 @@ export function BillingDialog({
 			})
 			return
 		}
+		if (expiresRequired && form.paidAt && form.expiresAt && form.expiresAt <= form.paidAt) {
+			toast({
+				title: t`Save failed`,
+				description: t`Expiry date must be after the paid date.`,
+				variant: "destructive",
+			})
+			return
+		}
 		const payload = {
 			system: system.id,
 			billingType: form.billingType,
@@ -257,7 +282,7 @@ export function BillingDialog({
 			cycle: form.cycle,
 			paidAt: fromDateInputValue(form.paidAt) ?? null,
 			expiresAt: expiresRequired ? fromDateInputValue(form.expiresAt) ?? null : null,
-			notifyDaysBefore: form.notifyDaysBefore === "" ? 0 : Number(form.notifyDaysBefore),
+			notifyDaysBefore: form.notifyDaysBefore === "" ? 7 : Number(form.notifyDaysBefore),
 			trafficLimit: toBytes(form.trafficLimit, form.trafficUnit),
 			trafficMode: form.trafficMode,
 			resetDay: form.resetDay === "" ? 1 : Number(form.resetDay),
@@ -283,57 +308,63 @@ export function BillingDialog({
 		}
 	}
 
-	// Live preview line for the cost tab
-	const previewText = (() => {
+	// Live preview line for the cost tab.
+	const preview = (() => {
 		if (isFree) return t({ id: "billing-free-no-expiry", message: "Free — no expiry tracked" })
-		let cycleLabel = ""
-		switch (form.cycle) {
-			case "monthly":
-				cycleLabel = t`/mo`
-				break
-			case "semiannual":
-				cycleLabel = t`/6mo`
-				break
-			case "annual":
-				cycleLabel = t`/yr`
-				break
-			case "biennial":
-				cycleLabel = t`/2yr`
-				break
-			case "triennial":
-				cycleLabel = t`/3yr`
-				break
-			case "permanent":
-				cycleLabel = ""
-				break
+		const pricePart = (
+			<>
+				{formatPrice(form.price === "" ? 0 : Number(form.price), form.currency)}
+				<CycleSuffix cycle={form.cycle} />
+			</>
+		)
+		const state = getBillingExpiryState(
+			form.billingType,
+			form.cycle,
+			parsePbDate(form.expiresAt ? `${form.expiresAt}T00:00:00.000Z` : "")
+		)
+		const datePart = form.expiresAt ? <> ({form.expiresAt})</> : null
+		if (state.kind === "permanent") {
+			return (
+				<>
+					{pricePart} · {t`Permanent`}
+				</>
+			)
 		}
-		const pricePart = `${formatPrice(form.price === "" ? 0 : Number(form.price), form.currency)}${cycleLabel}`
-		if (isPermanent) return `${pricePart} · ${t`Permanent`}`
-		const exp = getExpiryState(parsePbDate(form.expiresAt ? `${form.expiresAt}T00:00:00.000Z` : ""))
-		if (exp.kind === "active" && exp.daysLeft != null) {
-			const daysLeft = exp.daysLeft
-			return `${pricePart} · ${t`${daysLeft} days left`}`
+		if (state.kind === "active") {
+			const daysLeft = state.daysLeft
+			const daysText = daysLeft === 0 ? t`Expires today` : t`${daysLeft} days left`
+			return (
+				<>
+					{pricePart} · {daysText}
+					{datePart}
+				</>
+			)
 		}
-		if (exp.kind === "expired" && exp.daysLeft != null) {
-			const daysAgo = Math.abs(exp.daysLeft)
-			return `${pricePart} · ${t`expired ${daysAgo} days ago`}`
+		if (state.kind === "expired") {
+			const daysAgo = Math.abs(state.daysLeft)
+			return (
+				<>
+					{pricePart} · {t`expired ${daysAgo} days ago`}
+					{datePart}
+				</>
+			)
 		}
-		return pricePart
+		return <>{pricePart}</>
 	})()
 
 	const fieldDisabled = readOnly
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[520px]">
+			<DialogContent className="max-w-lg">
 				<DialogHeader>
 					<DialogTitle>
 						<Trans>Billing & Traffic</Trans>
 					</DialogTitle>
-					<DialogDescription>{system.name}</DialogDescription>
+					<DialogDescription>{t`Cost and traffic quota for ${systemName}.`}</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={handleSubmit} className="space-y-4">
+				<form onSubmit={handleSubmit} className="grid gap-4">
 					<Tabs defaultValue="cost" className="w-full">
 						<TabsList className="grid w-full grid-cols-2">
 							<TabsTrigger value="cost">
@@ -345,9 +376,9 @@ export function BillingDialog({
 						</TabsList>
 
 						{/* ---------------- Cost ---------------- */}
-						<TabsContent value="cost" className="space-y-3 mt-3">
-							<div className="space-y-1.5">
-								<Label>
+						<TabsContent value="cost" className="mt-3 grid gap-3">
+							<div className="grid gap-2">
+								<Label htmlFor="billingType">
 									<Trans>Billing type</Trans>
 								</Label>
 								<Select
@@ -372,7 +403,7 @@ export function BillingDialog({
 							{!isFree && (
 								<>
 									<div className="grid grid-cols-2 gap-3">
-										<div className="space-y-1.5">
+										<div className="grid gap-2">
 											<Label htmlFor="price">
 												<Trans>Price</Trans>
 											</Label>
@@ -386,8 +417,8 @@ export function BillingDialog({
 												onChange={(e) => set("price", e.target.value)}
 											/>
 										</div>
-										<div className="space-y-1.5">
-											<Label>
+										<div className="grid gap-2">
+											<Label htmlFor="currency">
 												<Trans>Currency</Trans>
 											</Label>
 											<Select
@@ -408,8 +439,8 @@ export function BillingDialog({
 										</div>
 									</div>
 
-									<div className="space-y-1.5">
-										<Label>
+									<div className="grid gap-2">
+										<Label htmlFor="cycle">
 											<Trans>Billing cycle</Trans>
 										</Label>
 										<Select
@@ -443,7 +474,7 @@ export function BillingDialog({
 										</Select>
 									</div>
 
-									<div className="space-y-1.5">
+									<div className="grid gap-2">
 										<Label htmlFor="paidAt">
 											<Trans>Paid date</Trans>
 										</Label>
@@ -457,7 +488,7 @@ export function BillingDialog({
 									</div>
 
 									{!isPermanent && (
-										<div className="space-y-1.5">
+										<div className="grid gap-2">
 											<Label htmlFor="expiresAt">
 												<Trans>Expiry date</Trans>
 											</Label>
@@ -482,7 +513,7 @@ export function BillingDialog({
 										</div>
 									)}
 
-									<div className="space-y-1.5">
+									<div className="grid gap-2">
 										<Label htmlFor="notifyDaysBefore">
 											<Trans>Notify</Trans>
 										</Label>
@@ -490,7 +521,7 @@ export function BillingDialog({
 											<Input
 												id="notifyDaysBefore"
 												type="number"
-												min={0}
+												min={1}
 												max={60}
 												value={form.notifyDaysBefore}
 												disabled={fieldDisabled}
@@ -501,17 +532,20 @@ export function BillingDialog({
 												<Trans>days before expiry</Trans>
 											</span>
 										</div>
+										<p className="text-xs text-muted-foreground">
+											<Trans>Reminders use your notification settings (email / webhook).</Trans>
+										</p>
 									</div>
 								</>
 							)}
 
-							<div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{previewText}</div>
+							<div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{preview}</div>
 						</TabsContent>
 
 						{/* ---------------- Traffic ---------------- */}
-						<TabsContent value="traffic" className="space-y-3 mt-3">
+						<TabsContent value="traffic" className="mt-3 grid gap-3">
 							<div className="grid grid-cols-[1fr_auto] gap-3">
-								<div className="space-y-1.5">
+								<div className="grid gap-2">
 									<Label htmlFor="trafficLimit">
 										<Trans>Traffic limit</Trans>
 									</Label>
@@ -525,8 +559,8 @@ export function BillingDialog({
 										placeholder="0"
 									/>
 								</div>
-								<div className="space-y-1.5">
-									<Label>
+								<div className="grid gap-2">
+									<Label htmlFor="trafficUnit">
 										<Trans>Unit</Trans>
 									</Label>
 									<Select
@@ -548,8 +582,8 @@ export function BillingDialog({
 								<Trans>Set to 0 for unlimited traffic (no card bar).</Trans>
 							</p>
 
-							<div className="space-y-1.5">
-								<Label>
+							<div className="grid gap-2">
+								<Label htmlFor="trafficMode">
 									<Trans>Traffic mode</Trans>
 								</Label>
 								<Select
@@ -571,7 +605,7 @@ export function BillingDialog({
 								</Select>
 							</div>
 
-							<div className="space-y-1.5">
+							<div className="grid gap-2">
 								<Label htmlFor="resetDay">
 									<Trans>Reset day</Trans>
 								</Label>
@@ -588,7 +622,7 @@ export function BillingDialog({
 							</div>
 
 							<div className="flex items-center justify-between rounded-md border p-3">
-								<div className="space-y-0.5">
+								<div className="grid gap-1">
 									<Label htmlFor="trafficAlerts">
 										<Trans>Traffic alerts</Trans>
 									</Label>

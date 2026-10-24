@@ -17,4 +17,5 @@
 ## 计费 / 流量
 
 - [ ] P5（预判）— `system_traffic` 每 60s 更新一次，若同时订阅全量记录，500 台系统时前端会有明显重渲染压力。→ 若发生，改为只订阅可见分页的系统。
+- [ ] P6 — 到期提醒**没有按系统的开关**：`system_billing` 只有 `notifyDaysBefore`（提前天数），投递开关是用户通知设置（email/webhook）里的全局配置；`notifyDaysBefore=0` 在 `ReminderLevel` 中等于「不提醒」，但 create hook 会把 `<=0` 重置为 7，所以 0 存不下来。若要「某系统单独关闭到期提醒」，需新增 `expiryAlerts` bool（或允许显式 0）。→ 建议 P7（cron）一起加，P7 的 `ReminderLevel` 已天然支持 0 档跳过。
 - [ ] P8（预判）— `AccumulateTraffic` 在事务内做 2 次额外查询（每系统每分钟）。个人规模无感，系统数 >100 时考虑加内存缓存。

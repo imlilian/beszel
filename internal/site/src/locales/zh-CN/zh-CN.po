@@ -132,26 +132,21 @@ msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, one {# 天} other {# 天}}"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/2yr"
 msgstr "/2年"
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/3yr"
 msgstr "/3年"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/6mo"
 msgstr "/半年"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/mo"
 msgstr "/月"
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/yr"
 msgstr "/年"
@@ -762,6 +757,10 @@ msgstr "核心"
 msgid "Cost"
 msgstr "费用"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost and traffic quota for {systemName}."
+msgstr "此系统的费用与流量配置：{systemName}。"
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1121,6 +1120,11 @@ msgstr "将在一小时后，或Hub重启时失效。"
 msgid "Expires at is required for a paid system that is not permanent."
 msgstr "非永久的付费系统必须填写到期时间。"
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires today"
+msgstr "今天到期"
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "<0>{value, plural, one {# 天} other {# 天}}</0>内到期"
@@ -1128,6 +1132,10 @@ msgstr "<0>{value, plural, one {# 天} other {# 天}}</0>内到期"
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Expiry date"
 msgstr "到期日期"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date must be after the paid date."
+msgstr "到期日期必须晚于付费日期。"
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Export"
@@ -2056,6 +2064,10 @@ msgstr "刷新"
 msgid "Relationships"
 msgstr "关系"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reminders use your notification settings (email / webhook)."
+msgstr "提醒通过你的通知设置（邮件 / Webhook）发送。"
+
 #: src/components/login/login.tsx
 msgid "Request a one-time password"
 msgstr "请求一次性密码"
@@ -2159,6 +2171,7 @@ msgstr "保存 {foo}"
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "使用回车键或逗号保存地址。留空以禁用电子邮件通知。"
 
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Save failed"

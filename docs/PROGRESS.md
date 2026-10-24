@@ -85,12 +85,15 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 20. **P6（偏差 §4.1 #7 不成立）：`components/ui/tabs.tsx` 已存在**（shadcn 封装，导出 `Tabs/TabsList/TabsTrigger/TabsContent`）。P6 直接复用，未新建 UI 组件；§4.1 #7 的"可能需新增 tabs.tsx"按现状作废。
 21. **P6 i18n 两个坑**：① 周期短标签（`/mo`/`/6mo`/`/yr`/`/2yr`/`/3yr`）必须写成内联 `t\`/mo\`` 宏；若抽成 `cycleShortLabel(cycle, t)` 把 `t` 当参数传进去，Lingui 宏不会提取，目录里就没有这些串（已踩过，已改为内联 switch）。② 计费场景的 "Free" 必须给显式 msgid（`billing-free` / `billing-type-free` / `billing-free-no-expiry`），否则会和已有的 `Free`→`可用空间` 串撞 id，被翻成"可用空间"。`permanent` 直接复用既有 `Permanent`→`永久`。
 22. **P6 构建在本机需绕过沙箱**：`npm run build` 末尾 Vite 清空 `dist/` 触发 harness 的 `SAFE_DELETE_BULK_CONFIRM_REQUIRED`（>50 文件）被拦。属沙箱策略，不是代码问题；用 `dangerouslyDisableSandbox` 重跑即可（仅 `dist` 清理这一步需要）。`tsc -b` / `bun test` / `lingui` 本身不需。
+23. **P6 评审修正（渲染正确性）**：① 表格 `billing` 列改为直接渲染 `<BillingSummary systemId ... />`（组件级订阅），不再在 `cell` 里 `useStore` + 早返回 `null` —— 原先数据异步到达后列不会重新渲染；② 服务端 `cols` 加载时用 `{ ...cols, billing: cols.billing ?? false }` 保留"默认隐藏"，避免老用户把该列默认看可见；③ 网格视图列循环跳过 `billing`，避免与卡片底部那一处重复渲染；④ `BillingSummary` 加 `bordered` 参数，表格单元格传 `false` 去掉多余上边框。
+24. **P6 评审修正（结构与 i18n）**：新增 `getBillingExpiryState(billingType, cycle, expiresAt, now)` 统一返回 `free|permanent|none|active|expired`（对齐 WORKPLAN §P6 语义，调用方不再各自判断）；周期短标签收敛到 `CycleSuffix` 组件，删除复用的 `formatCycleShort`；`getExpiryState` 把"到期当天"判为 `active(0)`（显示"今天到期"），此前会显示"已过期 0 天"；`daysUntilExpiry` 目标日改用本地日历日，与 Go `DaysUntilExpiry` 完全一致；`TrafficRecord.lastCounters/lastSampleAt` 标为可选（`TRAFFIC_FIELDS` 故意不拉取）；`Currency/Cycle/TrafficMode` 类型只在 `billing-utils` 定义、`billing.ts` re-export。
+25. **P6 到期提醒的"开关"机制（回答评审疑问）**：`system_billing` **没有**独立的按系统提醒开关（只有 `trafficAlerts` 是流量用）。到期提醒的投递开关是**用户通知设置**（`user_settings.settings` 里的 `emails`/`webhooks`）——两者都为空时 `alerts.SendAlert` 直接返回，和站内其它告警一致，所以"默认关闭、需用户自行配置"成立。`notifyDaysBefore` 只是**提前天数**，`ReminderLevel` 在 `<=0` 时返回 0（不提醒），但 create hook 会把 `<=0` 重置为 7（无法区分"未提交"与显式 0，同偏差 17），因此 0 在创建时存不住。P6 表单已把它当提前天数处理（`min=1`，默认 7）并加提示"提醒走通知设置"；若需"某系统单独关闭"，要新增 `expiryAlerts` bool → 记入 `FOLLOWUPS.md`，建议 P7 一起做。
 
 ## 4.1 P6（计费前端）开工必读
 
 计划见 WORKPLAN「阶段 P6」，以下是计划里没写、但会直接踩到的点：
 
-1. **`SystemCard` 的渲染在 `useMemo` 里**（`systems-table.tsx` 末尾），直接在里面读 `$billingBySystemId.get()` 不会随数据到达而重渲染。必须在组件体内 `const billing = useStore($billingBySystemId)[system.id]`，并把它放进 `useMemo` 依赖（`ActionsButton` 同理，`billingOpen` 要进依赖）。
+1. **`SystemCard` 的渲染在 `useMemo` 里**（`systems-table.tsx` 末尾），直接在里面读 `$billingBySystemId.get()` 不会随数据到达而重渲染。**最稳的做法**是把订阅放进独立组件（`BillingSummary` 自己 `useStore`），memo 化的渲染里只渲染该组件、不直接读 atom；`ActionsButton` 里的对话框状态（`billingOpen`）仍要进 `useMemo` 依赖（因为它控制的是 JSX 分支，不是数据订阅）。
 2. **后端会拒绝非法组合**：`paid` + 非 `permanent` 且没填 `expiresAt` → 400（message 为 `ExpiresAt is required for a paid system that is not permanent.`）；`expiresAt <= paidAt` 也 400。表单必须把到期日设为必填，并把接口返回的 `message` 原样显示在 toast 里，不要笼统写"保存失败"。
 3. **PocketBase 拒绝写的状态码不统一**：create rule 拒绝是 400、update rule 拒绝是 404、rule 为 nil 才是 403。readonly 用户不该发请求（前端先 `isReadOnlyUser()` 禁用），但兜底提示别按 403 写。
 4. **`trafficAlerts` 的默认值 true 只能由前端提交**（后端 hook 无法区分"未提交"和显式 false，见偏差 17）。表单初始值记得给 `true`。

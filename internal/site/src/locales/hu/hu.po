@@ -132,26 +132,21 @@ msgid "{value, plural, one {# day} other {# days}}"
 msgstr "{value, plural, one {# nap} other {# nap}}"
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/2yr"
 msgstr ""
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/3yr"
 msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/6mo"
 msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
-#: src/components/systems-table/billing-dialog.tsx
 msgid "/mo"
 msgstr ""
 
-#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "/yr"
 msgstr ""
@@ -762,6 +757,10 @@ msgstr "Mag"
 msgid "Cost"
 msgstr ""
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Cost and traffic quota for {systemName}."
+msgstr ""
+
 #: src/components/containers-table/containers-table-columns.tsx
 #: src/components/systemd-table/systemd-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1121,12 +1120,21 @@ msgstr "Lejár egy óra után vagy a hub újraindításakor."
 msgid "Expires at is required for a paid system that is not permanent."
 msgstr ""
 
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expires today"
+msgstr ""
+
 #: src/components/alerts/alerts-sheet.tsx
 msgid "Expires within <0>{value, plural, one {# day} other {# days}}</0>"
 msgstr "<0>{value, plural, one {# nap} other {# nap}}</0> belül lejár"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Expiry date"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Expiry date must be after the paid date."
 msgstr ""
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -2056,6 +2064,10 @@ msgstr "Frissítés"
 msgid "Relationships"
 msgstr "Kapcsolatok"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reminders use your notification settings (email / webhook)."
+msgstr ""
+
 #: src/components/login/login.tsx
 msgid "Request a one-time password"
 msgstr "Egyszeri jelszó kérése"
@@ -2159,6 +2171,7 @@ msgstr "{foo} mentése"
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "Mentse el a címet az Enter billentyű vagy a vessző használatával. Hagyja üresen az e-mail értesítések letiltásához."
 
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Save failed"

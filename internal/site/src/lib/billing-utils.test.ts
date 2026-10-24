@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 import {
 	addCycle,
 	daysUntilExpiry,
-	formatCycleShort,
 	formatPrice,
+	getBillingExpiryState,
 	getExpirySeverity,
 	getExpiryState,
 	getTrafficState,
@@ -29,19 +29,8 @@ describe("formatPrice", () => {
 	})
 })
 
-describe("formatCycleShort", () => {
-	test("maps every cycle", () => {
-		expect(formatCycleShort("monthly")).toBe("/mo")
-		expect(formatCycleShort("semiannual")).toBe("/6mo")
-		expect(formatCycleShort("annual")).toBe("/yr")
-		expect(formatCycleShort("biennial")).toBe("/2yr")
-		expect(formatCycleShort("triennial")).toBe("/3yr")
-		expect(formatCycleShort("permanent")).toBe("")
-	})
-})
-
 describe("daysUntilExpiry", () => {
-	const now = Date.UTC(2026, 2, 1) // Mar 1 2026 (UTC)
+	const now = Date.UTC(2026, 2, 1) // Mar 1 2026
 	test("future positive day count", () => {
 		expect(daysUntilExpiry(Date.UTC(2026, 2, 13), now)).toBe(12)
 	})
@@ -60,6 +49,11 @@ describe("getExpiryState", () => {
 		expect(s.kind).toBe("active")
 		expect(s.daysLeft).toBe(12)
 	})
+	test("expiry day itself -> active with 0 days left", () => {
+		const s = getExpiryState(Date.UTC(2026, 2, 1), now)
+		expect(s.kind).toBe("active")
+		expect(s.daysLeft).toBe(0)
+	})
 	test("past -> expired", () => {
 		const s = getExpiryState(Date.UTC(2026, 1, 20), now)
 		expect(s.kind).toBe("expired")
@@ -67,6 +61,30 @@ describe("getExpiryState", () => {
 	})
 	test("zero -> none", () => {
 		expect(getExpiryState(0, now).kind).toBe("none")
+	})
+})
+
+describe("getBillingExpiryState", () => {
+	const now = Date.UTC(2026, 2, 1)
+	test("free wins over every other field", () => {
+		expect(getBillingExpiryState("free", "monthly", Date.UTC(2026, 2, 13), now).kind).toBe("free")
+	})
+	test("permanent has no expiry", () => {
+		expect(getBillingExpiryState("paid", "permanent", Date.UTC(2026, 2, 13), now).kind).toBe("permanent")
+	})
+	test("paid without an expiry -> none", () => {
+		expect(getBillingExpiryState("paid", "monthly", 0, now).kind).toBe("none")
+	})
+	test("active carries daysLeft", () => {
+		expect(getBillingExpiryState("paid", "monthly", Date.UTC(2026, 2, 13), now)).toEqual({
+			kind: "active",
+			daysLeft: 12,
+		})
+	})
+	test("expired carries negative daysLeft", () => {
+		const s = getBillingExpiryState("paid", "monthly", Date.UTC(2026, 1, 20), now)
+		if (s.kind !== "expired") throw new Error(`expected expired, got ${s.kind}`)
+		expect(s.daysLeft).toBeLessThan(0)
 	})
 })
 

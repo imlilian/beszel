@@ -95,7 +95,11 @@ export default function SystemsTable() {
 		return subscribeKeys($userSettings, ["cols", "statusFilter", "viewMode", "sortMode"], (vals) => {
 			if (!applied.current.has("cols") && vals.cols !== undefined) {
 				applied.current.add("cols")
-				setColumnVisibility(vals.cols)
+				// Preserve the billing column's opt-in default; a server-side `cols`
+				// saved before P6 won't contain the key, and an absent key would
+				// otherwise make the column visible.
+				const cols = vals.cols as VisibilityState
+				setColumnVisibility({ ...cols, billing: cols.billing ?? false })
 			}
 			if (!applied.current.has("statusFilter") && vals.statusFilter !== undefined) {
 				applied.current.add("statusFilter")
@@ -554,7 +558,14 @@ const SystemCard = memo(
 							style={{ gridTemplateColumns: "24px minmax(80px, max-content) minmax(0, 1fr)" }}
 						>
 							{table.getAllColumns().map((column) => {
-								if (!column.getIsVisible() || column.id === "system" || column.id === "actions") return null
+								// billing is rendered once below the grid, not as a label/value row.
+								if (
+									!column.getIsVisible() ||
+									column.id === "system" ||
+									column.id === "actions" ||
+									column.id === "billing"
+								)
+									return null
 								const cell = row.getAllCells().find((cell) => cell.column.id === column.id)
 								if (!cell) return null
 								// @ts-expect-error

@@ -28,7 +28,6 @@ import { memo, useMemo, useRef, useState } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { isReadOnlyUser, pb } from "@/lib/api"
 import { BatteryState, ConnectionType, connectionTypeLabels, MeterState, SystemStatus } from "@/lib/enums"
-import { $billingBySystemId } from "@/lib/billing"
 import { BillingDialog, BillingSummary } from "./billing-dialog"
 import { $userSettings } from "@/lib/stores"
 import {
@@ -593,12 +592,7 @@ export function SystemsTableColumns(viewMode: "table" | "grid"): ColumnDef<Syste
 			enableHiding: true,
 			size: 0,
 			hideSort: true,
-			cell: (info) => {
-				const system = info.row.original
-				const billing = useStore($billingBySystemId)[system.id]
-				if (!billing) return null
-				return <BillingSummary systemId={system.id} />
-			},
+			cell: (info) => <BillingSummary systemId={info.row.original.id} bordered={false} />,
 		},
 		{
 			id: "actions",
