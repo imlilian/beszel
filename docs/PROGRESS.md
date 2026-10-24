@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-24（P4 完成时）
+> 最后更新：2026-10-24（P5 完成时）
 
 ## 1. 阶段状态
 
@@ -14,8 +14,8 @@
 | P2 900ms 计丢包 + 阈值 | ✅ 完成 | `28a05f0f` | Agent 归一化 + 前端阈值设置 |
 | P3 卡片上下行 | ✅ 完成 | `80197c5e` | `Info` 加 `bu/bd`（cbor 28/29），卡片 ↑↓ 分开显示 |
 | P4 监控卡片视图 | ✅ 完成 | `f207b34f`→`d954fdd8`（5 提交） | 表格/卡片切换 + 20 色块 + 卡片墙 |
-| P5 计费数据模型 | ⬜ **下一步** | — | 2 个新集合 |
-| P6 计费前端 | ⬜ | — | — |
+| P5 计费数据模型 | ✅ 完成 | `b2e23cbb` | 2 个新集合 + 权限 + `hub/billing` 包 |
+| P6 计费前端 | ⬜ **下一步** | — | — |
 | P7 到期提醒 | ⬜ | — | — |
 | P8 流量后端 | ⬜ | — | — |
 | P9 流量前端 | ⬜ | — | — |
@@ -52,6 +52,9 @@ git status --short            # 应无输出
 | `getBlockSpec` / `buildQualityBlocks` / `getBlockLevel` | `site/src/lib/monitor-blocks.ts` | 纯函数，按探测次数聚合成 20 个色块；`total === 0` 判 `empty` 不判丢包 |
 | `useMonitorCardStats({monitors, thresholds, enabled})` | `site/src/lib/use-monitor-cards.ts` | 每 type 一次 `getFullList` + 1 个 realtime 订阅，返回 `Map<monitorId, QualityBlock[]>`（新→旧） |
 | `QualityBlocks` / `MonitorCardGrid` / `getMonitorGridClass` | `site/src/components/network-monitors-table/` | 色块条（含部分丢包红边）与系统卡片墙；网格类必须照抄，别改断点 |
+| `billing.Load(app, systemId)` / `billing.LoadTraffic(...)` | `internal/hub/billing/billing.go` | 返回 `*Config` / `*Traffic`（无记录时 nil, nil）；P7/P8 直接用 |
+| `billing.DaysUntilExpiry` / `Period` / `ReminderLevel` / `AddCycle` | 同上 | 纯函数：整天差（抗 DST）、周期边界（resetDay 夹取）、提醒档位、到期日推算 |
+| `system_billing` / `system_traffic` | 迁移 `1793010000` / `1793010001` | 1:1 唯一索引 + 级联删除；traffic 只有 Hub 能写 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
 ```ts
@@ -74,6 +77,11 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 12. **P4：`useMonitorCardStats` 多一个可选 `enabled`**（计划接口没写）。表格视图下不拉数据、不订阅，省掉一个全局 `network_monitor_stats` 实时订阅。
 13. **P4：卡片"无数据"时丢包显示 `—`**（PRD §6.4.4 口径），不是计划骨架里的无条件 `loss1h.toFixed(1)`。判据用 `resAvg1h === 0 && loss1h === 0`（`network_monitors` 记录里没有 `sampleCount` 字段，PRD 那句写的是理想字段）。
 14. **P4 的人工验收矩阵尚未在真实实例上跑过**（0/1/3/5/8 系统、interval 60s/120s/300s、全丢、窄屏、深色、RTL、200 监控下的请求数）。已通过的自动化部分：`tsc -b`、`vite build`、`bun test src/lib/`（44 pass，含色块聚合 11 条）、产物 CSS 已生成 `@[340px]` / `@[560px]` 容器查询规则。要做人工验收需 `make build-hub-dev` 并接入真实 Agent 数据。
+15. **P5：新集合必须显式声明 `created` / `updated`**。`core.NewBaseCollection` 只自动加 `id` 字段，dashboard 建的集合才自带 autodate；漏了就没有时间戳（实测 `PRAGMA table_info` 才发现，已加 `core.AutodateField` 并写进测试断言）。
+16. **P5：PocketBase 的状态码不是 403 一刀切**。create rule 拒绝 → 400 `Failed to create record`；update rule 拒绝 → 404（不暴露记录存在）；只有 rule 为 nil（"禁止所有人"）才 403 `Only superusers can perform this action`。权限测试按实测行为断言，别按直觉写 403。
+17. **P5：`trafficAlerts` 默认 true 没在 hook 里兜底**。PB 无法区分"字段未提交"与"显式 false"（`GetBool` 都是 false），所以默认值交给 P6 表单提交，hook 只兜字符串枚举与数值默认。
+18. **P5：`AddCycle` 做了月末夹取**（1/31 + 1 月 = 2/28 或 2/29），计划的 `time.AddDate` 会溢出到 3/3，不符合"到期日"语义。
+19. **P5：`hub/billing` 超出计划范围加了 `Load` / `LoadTraffic` / `ParseCounters`**。阶段目标写了"能读"，P8 采样时直接复用，不必再写一遍记录→结构体映射。
 
 ## 5. 验证命令（Windows 实测可用）
 
