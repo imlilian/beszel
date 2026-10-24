@@ -41,7 +41,7 @@ function appendCacheValue(
 }
 
 /** Build a `(monitor={:m0} || monitor={:m1} ...)` filter expression and its params. */
-function monitorIdsFilter(monitorIds: string[]) {
+export function monitorIdsFilter(monitorIds: string[]) {
 	const params: Record<string, string> = {}
 	const expr = monitorIds
 		.map((id, i) => {
