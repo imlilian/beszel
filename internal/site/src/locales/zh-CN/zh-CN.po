@@ -34,6 +34,11 @@ msgstr "{0} 可用"
 msgid "{0} of {1} row(s) selected."
 msgstr "已选择 {0} / {1} 行"
 
+#. placeholder {0}: block.total
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{0} probes"
+msgstr "{0} 次探测"
+
 #. placeholder {0}: table.getFilteredRowModel().rows.length
 #: src/components/ui/data-table-pagination.tsx
 msgid "{0} row(s)"
@@ -68,6 +73,26 @@ msgstr "{count, plural, one {{countString} 小时} other {{countString} 小时}}
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} 分钟} few {{countString} 分钟} many {{countString} 分钟} other {{countString} 分钟}}"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} critical"
+msgstr "{count} 严重"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} good"
+msgstr "{count} 良好"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} lost"
+msgstr "{count} 丢包"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} no data"
+msgstr "{count} 无数据"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} warning"
+msgstr "{count} 警告"
 
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "{daysLeft, plural, one {# day} other {# days}}"
@@ -315,6 +340,10 @@ msgstr "GPU 引擎的平均利用率"
 msgid "Average, minimum, and maximum response time"
 msgstr "平均、最小和最大响应时间"
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Avg"
+msgstr "平均"
+
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "Avg 1h"
@@ -444,11 +473,11 @@ msgstr "证书"
 msgid "Certificate Expiration"
 msgstr "证书到期"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expired {expires}"
 msgstr "证书已过期 {expires}"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expires {expires}"
 msgstr "证书将于 {expires} 过期"
 
@@ -554,11 +583,11 @@ msgstr "按响应时间为网络监控的延迟数值着色。此项只影响颜
 msgid "Command line instructions"
 msgstr "命令行说明"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other systems"
 msgstr "与其他系统比较"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other targets"
 msgstr "与其他目标比较"
 
@@ -925,6 +954,10 @@ msgstr "电子邮件通知"
 msgid "Empty"
 msgstr "空电"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Enable all"
+msgstr "全部启用"
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "End Time"
@@ -958,6 +991,7 @@ msgstr "输入您的一次性密码。"
 msgid "Ephemeral"
 msgstr "暂时"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
@@ -1070,6 +1104,7 @@ msgstr "发送测试通知失败"
 msgid "Failed to update alert"
 msgstr "更新警报失败"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 msgid "Failed to update monitors."
 msgstr "更新监控失败。"
@@ -1161,6 +1196,7 @@ msgstr "GPU 功耗"
 msgid "GPU Usage"
 msgstr "GPU 使用率"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
@@ -1271,6 +1307,15 @@ msgstr "无效的电子邮件地址。"
 msgid "Language"
 msgstr "语言"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Latency"
+msgstr "延迟"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Latency quality, oldest to newest: {summary}"
+msgstr "延迟质量（由旧到新）：{summary}"
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Layout"
 msgstr "布局"
@@ -1342,6 +1387,12 @@ msgstr "日志"
 #: src/components/routes/settings/notifications.tsx
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "在寻找创建警报的位置吗？点击系统表中的铃铛<0/>图标。"
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Loss"
+msgstr "丢包"
 
 #: src/components/routes/system/charts/monitors-charts.tsx
 msgctxt "Packet loss"
@@ -1428,6 +1479,10 @@ msgstr "型号"
 msgid "Monitor"
 msgstr "监控"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Monitor actions"
+msgstr "监控操作"
+
 #: src/components/routes/settings/general.tsx
 msgid "Monitor thresholds"
 msgstr "监控阈值"
@@ -1435,6 +1490,10 @@ msgstr "监控阈值"
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
 msgstr "已创建监控"
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "more monitors"
+msgstr "个监控"
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Mountpoint"
@@ -1507,6 +1566,10 @@ msgstr "此存储池没有可用的详细数据。"
 msgid "No logs found."
 msgstr "未找到日志。"
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "No probes"
+msgstr "无探测"
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1515,6 +1578,7 @@ msgstr "未找到结果。"
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/package-updates-table.tsx
@@ -1675,6 +1739,10 @@ msgstr "补丁"
 msgid "Pause"
 msgstr "暂停"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Pause all"
+msgstr "全部暂停"
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Paused"
 msgstr "已暂停"
@@ -1805,6 +1873,10 @@ msgstr "队列深度"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "静默时间"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Range"
+msgstr "区间"
 
 #: src/components/routes/system/raw-capacity-label.tsx
 #: src/components/routes/system/storage-pools-table.tsx
@@ -2158,6 +2230,10 @@ msgstr "切换主题"
 msgid "System"
 msgstr "系统"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "System details"
+msgstr "系统详情"
+
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "System fan speeds (RPM)"
 msgstr "系统风扇速度（RPM）"
@@ -2180,6 +2256,7 @@ msgstr "系统"
 msgid "Systems may be managed in a <0>config.yml</0> file inside your data directory."
 msgstr "系统可以在数据目录中的<0>config.yml</0>文件中管理。"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Table"
 msgstr "表格"

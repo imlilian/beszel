@@ -34,6 +34,11 @@ msgstr "{0} が利用可能"
 msgid "{0} of {1} row(s) selected."
 msgstr "{1}行のうち{0}行が選択されました。"
 
+#. placeholder {0}: block.total
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{0} probes"
+msgstr ""
+
 #. placeholder {0}: table.getFilteredRowModel().rows.length
 #: src/components/ui/data-table-pagination.tsx
 msgid "{0} row(s)"
@@ -68,6 +73,26 @@ msgstr "{count, plural, one {{countString} 時間} other {{countString} 時間}}
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} 分} few {{countString} 分} many {{countString} 分} other {{countString} 分}}"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} critical"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} good"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} lost"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} no data"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} warning"
+msgstr ""
 
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "{daysLeft, plural, one {# day} other {# days}}"
@@ -315,6 +340,10 @@ msgstr "GPUエンジンの平均使用率"
 msgid "Average, minimum, and maximum response time"
 msgstr "応答時間の平均、最小、最大"
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Avg"
+msgstr ""
+
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "Avg 1h"
@@ -444,11 +473,11 @@ msgstr "証明書"
 msgid "Certificate Expiration"
 msgstr "証明書の有効期限"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expired {expires}"
 msgstr "証明書は{expires}に期限が切れました"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expires {expires}"
 msgstr "証明書は{expires}に期限が切れます"
 
@@ -554,11 +583,11 @@ msgstr ""
 msgid "Command line instructions"
 msgstr "コマンドラインの指示"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other systems"
 msgstr "他のシステムと比較"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other targets"
 msgstr "他のターゲットと比較"
 
@@ -925,6 +954,10 @@ msgstr "メール通知"
 msgid "Empty"
 msgstr "空"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Enable all"
+msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "End Time"
@@ -958,6 +991,7 @@ msgstr "ワンタイムパスワードを入力してください。"
 msgid "Ephemeral"
 msgstr "一時的"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
@@ -1070,6 +1104,7 @@ msgstr "テスト通知の送信に失敗しました"
 msgid "Failed to update alert"
 msgstr "アラートの更新に失敗しました"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 msgid "Failed to update monitors."
 msgstr "モニターの更新に失敗しました。"
@@ -1161,6 +1196,7 @@ msgstr "GPUの消費電力"
 msgid "GPU Usage"
 msgstr "GPU使用率"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
@@ -1271,6 +1307,15 @@ msgstr "無効なメールアドレスです。"
 msgid "Language"
 msgstr "言語"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Latency"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Latency quality, oldest to newest: {summary}"
+msgstr ""
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Layout"
 msgstr "レイアウト"
@@ -1342,6 +1387,12 @@ msgstr "ログ"
 #: src/components/routes/settings/notifications.tsx
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "アラートを作成する場所を探していますか？システムテーブルのベル<0/>アイコンをクリックしてください。"
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Loss"
+msgstr ""
 
 #: src/components/routes/system/charts/monitors-charts.tsx
 msgctxt "Packet loss"
@@ -1428,6 +1479,10 @@ msgstr "モデル"
 msgid "Monitor"
 msgstr "モニター"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Monitor actions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Monitor thresholds"
 msgstr ""
@@ -1435,6 +1490,10 @@ msgstr ""
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
 msgstr "モニターを作成しました"
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "more monitors"
+msgstr ""
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Mountpoint"
@@ -1507,6 +1566,10 @@ msgstr "このプールの詳細データはありません。"
 msgid "No logs found."
 msgstr "ログが見つかりません。"
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "No probes"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1515,6 +1578,7 @@ msgstr "結果が見つかりませんでした。"
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/package-updates-table.tsx
@@ -1675,6 +1739,10 @@ msgstr "パッチ"
 msgid "Pause"
 msgstr "一時停止"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Pause all"
+msgstr ""
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Paused"
 msgstr "一時停止中"
@@ -1805,6 +1873,10 @@ msgstr "キューの深さ"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "サイレント時間"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Range"
+msgstr ""
 
 #: src/components/routes/system/raw-capacity-label.tsx
 #: src/components/routes/system/storage-pools-table.tsx
@@ -2158,6 +2230,10 @@ msgstr "テーマを切り替え"
 msgid "System"
 msgstr "システム"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "System details"
+msgstr ""
+
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "System fan speeds (RPM)"
 msgstr "システムファン速度 (RPM)"
@@ -2180,6 +2256,7 @@ msgstr "システム"
 msgid "Systems may be managed in a <0>config.yml</0> file inside your data directory."
 msgstr "システムはデータディレクトリ内の<0>config.yml</0>ファイルで管理できます。"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Table"
 msgstr "テーブル"

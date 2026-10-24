@@ -408,6 +408,8 @@ export interface UserSettings {
 	monitorCols?: Record<string, boolean>
 	monitorSortMode?: Array<{ id: string; desc: boolean }>
 	monitorSortModeSystem?: Array<{ id: string; desc: boolean }>
+	/** Network monitors page layout: table or card grid. */
+	monitorViewMode?: "table" | "grid"
 	/** Display-only latency thresholds in ms for monitor colors (does not affect collected data). */
 	monitorWarnMs?: number
 	monitorCritMs?: number

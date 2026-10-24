@@ -20,7 +20,6 @@ import { getMonitorLevel, monitorLevelText, type MonitorThresholds } from "@/lib
 import { cn, formatMicroseconds } from "@/lib/utils"
 import type { NetworkMonitorRecord, SystemRecord } from "@/types"
 import { $router, navigate } from "../router"
-import { AddMonitorDialog } from "./monitor-dialog"
 import { QualityBlocks } from "./quality-blocks"
 
 /** Blocks shown per system card before the rest collapse into "+N more". */
@@ -150,7 +149,6 @@ const SystemMonitorCard = memo(function SystemMonitorCard({
 					<span className="truncate">{system?.name ?? systemId}</span>
 				</CardTitle>
 				<div className="flex shrink-0 items-center gap-1">
-					{canManage ? <AddMonitorDialog systemId={systemId} monitors={monitors} /> : null}
 					<SystemCardMenu systemId={systemId} monitors={monitors} canManage={canManage} />
 				</div>
 			</CardHeader>

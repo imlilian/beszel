@@ -34,6 +34,11 @@ msgstr "{0} disponible"
 msgid "{0} of {1} row(s) selected."
 msgstr "{0} sur  {1} ligne(s) sectionner."
 
+#. placeholder {0}: block.total
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{0} probes"
+msgstr ""
+
 #. placeholder {0}: table.getFilteredRowModel().rows.length
 #: src/components/ui/data-table-pagination.tsx
 msgid "{0} row(s)"
@@ -68,6 +73,26 @@ msgstr "{count, plural, one {{countString} heure} other {{countString} heures}}"
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} minute} other {{countString} minutes}}"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} critical"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} good"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} lost"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} no data"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} warning"
+msgstr ""
 
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "{daysLeft, plural, one {# day} other {# days}}"
@@ -315,6 +340,10 @@ msgstr "Utilisation moyenne des moteurs GPU"
 msgid "Average, minimum, and maximum response time"
 msgstr "Temps de réponse moyen, minimal et maximal"
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Avg"
+msgstr ""
+
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "Avg 1h"
@@ -444,11 +473,11 @@ msgstr "Certificat"
 msgid "Certificate Expiration"
 msgstr "Expiration du certificat"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expired {expires}"
 msgstr "Certificat expiré {expires}"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expires {expires}"
 msgstr "Le certificat expire le {expires}"
 
@@ -554,11 +583,11 @@ msgstr ""
 msgid "Command line instructions"
 msgstr "Instructions en ligne de commande"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other systems"
 msgstr "Comparer avec d'autres systèmes"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other targets"
 msgstr "Comparer avec d'autres cibles"
 
@@ -925,6 +954,10 @@ msgstr "Notifications par email"
 msgid "Empty"
 msgstr "Vide"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Enable all"
+msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "End Time"
@@ -958,6 +991,7 @@ msgstr "Entrez votre mot de passe à usage unique."
 msgid "Ephemeral"
 msgstr "Éphémère"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
@@ -1070,6 +1104,7 @@ msgstr "Échec de l'envoi de la notification de test"
 msgid "Failed to update alert"
 msgstr "Échec de la mise à jour de l'alerte"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 msgid "Failed to update monitors."
 msgstr "Échec de la mise à jour des moniteurs."
@@ -1161,6 +1196,7 @@ msgstr "Consommation du GPU"
 msgid "GPU Usage"
 msgstr "Utilisation GPU"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
@@ -1271,6 +1307,15 @@ msgstr "Adresse email invalide."
 msgid "Language"
 msgstr "Langue"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Latency"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Latency quality, oldest to newest: {summary}"
+msgstr ""
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Layout"
 msgstr "Disposition"
@@ -1342,6 +1387,12 @@ msgstr "Journaux"
 #: src/components/routes/settings/notifications.tsx
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Vous cherchez plutôt où créer des alertes ? Cliquez sur les icônes de cloche <0/> dans le tableau des systèmes."
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Loss"
+msgstr ""
 
 #: src/components/routes/system/charts/monitors-charts.tsx
 msgctxt "Packet loss"
@@ -1428,6 +1479,10 @@ msgstr "Modèle"
 msgid "Monitor"
 msgstr "Moniteur"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Monitor actions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Monitor thresholds"
 msgstr ""
@@ -1435,6 +1490,10 @@ msgstr ""
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
 msgstr "Moniteurs créés"
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "more monitors"
+msgstr ""
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Mountpoint"
@@ -1507,6 +1566,10 @@ msgstr "Aucune donnée détaillée disponible pour ce pool."
 msgid "No logs found."
 msgstr "Aucun journal trouvé."
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "No probes"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1515,6 +1578,7 @@ msgstr "Aucun résultat trouvé."
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/package-updates-table.tsx
@@ -1675,6 +1739,10 @@ msgstr "Correctif"
 msgid "Pause"
 msgstr "Pause"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Pause all"
+msgstr ""
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Paused"
 msgstr "En pause"
@@ -1805,6 +1873,10 @@ msgstr "Profondeur de file d'attente"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "Heures calmes"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Range"
+msgstr ""
 
 #: src/components/routes/system/raw-capacity-label.tsx
 #: src/components/routes/system/storage-pools-table.tsx
@@ -2158,6 +2230,10 @@ msgstr "Changer de thème"
 msgid "System"
 msgstr "Système"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "System details"
+msgstr ""
+
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "System fan speeds (RPM)"
 msgstr "Vitesses des ventilateurs du système (RPM)"
@@ -2180,6 +2256,7 @@ msgstr "Systèmes"
 msgid "Systems may be managed in a <0>config.yml</0> file inside your data directory."
 msgstr "Les systèmes peuvent être gérés dans un fichier <0>config.yml</0> à l'intérieur de votre répertoire de données."
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Table"
 msgstr "Tableau"

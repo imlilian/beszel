@@ -31,6 +31,8 @@ interface UseMonitorCardStatsProps {
 	/** Monitors currently visible (already filtered and paginated by the caller). */
 	monitors: NetworkMonitorRecord[]
 	thresholds: MonitorThresholds
+	/** Skip fetching and subscribing while the card wall isn't on screen. */
+	enabled?: boolean
 }
 
 /** Unique key for a raw record, used to dedupe fetched rows against realtime ones. */
@@ -64,7 +66,11 @@ function pruneRecords(records: RawMonitorStatsRecord[], widestBlockMs: number) {
  *
  * Returns `monitorId -> blocks` (newest block first).
  */
-export function useMonitorCardStats({ monitors, thresholds }: UseMonitorCardStatsProps): Map<string, QualityBlock[]> {
+export function useMonitorCardStats({
+	monitors,
+	thresholds,
+	enabled = true,
+}: UseMonitorCardStatsProps): Map<string, QualityBlock[]> {
 	// Group by the block size the monitor needs, and keep a stable dependency key so effects
 	// don't re-run just because the caller passed a new array with the same monitors.
 	const groups = useMemo(() => {
@@ -84,6 +90,7 @@ export function useMonitorCardStats({ monitors, thresholds }: UseMonitorCardStat
 
 	// Initial history: one request per record type.
 	useEffect(() => {
+		if (!enabled) return
 		let cancelled = false
 		const now = Date.now()
 		const fetched: StatsByType = { "1m": [], "10m": [] }
@@ -129,10 +136,11 @@ export function useMonitorCardStats({ monitors, thresholds }: UseMonitorCardStat
 		return () => {
 			cancelled = true
 		}
-	}, [idsKey])
+	}, [idsKey, enabled])
 
 	// Single realtime subscription, split by record type on arrival.
 	useEffect(() => {
+		if (!enabled) return
 		let cancelled = false
 		let unsubscribe: (() => void) | undefined
 		const pending = new Map<string, RawMonitorStatsRecord>()
@@ -192,7 +200,7 @@ export function useMonitorCardStats({ monitors, thresholds }: UseMonitorCardStat
 			pending.clear()
 			unsubscribe?.()
 		}
-	}, [])
+	}, [enabled])
 
 	// Shift the bar on block boundaries instead of on every render, and pause while hidden.
 	useEffect(() => {

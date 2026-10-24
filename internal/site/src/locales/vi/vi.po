@@ -34,6 +34,11 @@ msgstr "{0} có sẵn"
 msgid "{0} of {1} row(s) selected."
 msgstr "Đã chọn {0} trên {1} hàng."
 
+#. placeholder {0}: block.total
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{0} probes"
+msgstr ""
+
 #. placeholder {0}: table.getFilteredRowModel().rows.length
 #: src/components/ui/data-table-pagination.tsx
 msgid "{0} row(s)"
@@ -68,6 +73,26 @@ msgstr "{count, plural, one {{countString} giờ} other {{countString} giờ}}"
 #: src/lib/utils.ts
 msgid "{count, plural, one {{countString} minute} few {{countString} minutes} many {{countString} minutes} other {{countString} minutes}}"
 msgstr "{count, plural, one {{countString} phút} few {{countString} phút} many {{countString} phút} other {{countString} phút}}"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} critical"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} good"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} lost"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} no data"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "{count} warning"
+msgstr ""
 
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "{daysLeft, plural, one {# day} other {# days}}"
@@ -315,6 +340,10 @@ msgstr "Mức sử dụng trung bình của động cơ GPU"
 msgid "Average, minimum, and maximum response time"
 msgstr "Thời gian phản hồi trung bình, tối thiểu và tối đa"
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Avg"
+msgstr ""
+
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 #: src/components/network-monitors-table/network-monitors-columns.tsx
 msgid "Avg 1h"
@@ -444,11 +473,11 @@ msgstr "Chứng chỉ"
 msgid "Certificate Expiration"
 msgstr "Hết hạn chứng chỉ"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expired {expires}"
 msgstr "Chứng chỉ đã hết hạn {expires}"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Certificate expires {expires}"
 msgstr "Chứng chỉ sẽ hết hạn {expires}"
 
@@ -554,11 +583,11 @@ msgstr ""
 msgid "Command line instructions"
 msgstr "Hướng dẫn dòng lệnh"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other systems"
 msgstr "So sánh với các hệ thống khác"
 
-#: src/components/network-monitors-table/network-monitors-table.tsx
+#: src/components/network-monitors-table/network-monitor-sheet.tsx
 msgid "Compare with other targets"
 msgstr "So sánh với các mục tiêu khác"
 
@@ -925,6 +954,10 @@ msgstr "Thông báo email"
 msgid "Empty"
 msgstr "Hết pin"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Enable all"
+msgstr ""
+
 #: src/components/routes/settings/quiet-hours.tsx
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "End Time"
@@ -958,6 +991,7 @@ msgstr "Nhập mật khẩu một lần của bạn."
 msgid "Ephemeral"
 msgstr "Tạm thời"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/monitor-dialog.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
@@ -1070,6 +1104,7 @@ msgstr "Gửi thông báo thử nghiệm thất bại"
 msgid "Failed to update alert"
 msgstr "Cập nhật cảnh báo thất bại"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 msgid "Failed to update monitors."
 msgstr "Không thể cập nhật các trình giám sát."
@@ -1161,6 +1196,7 @@ msgstr "Mức tiêu thụ điện của GPU"
 msgid "GPU Usage"
 msgstr "Sử dụng GPU"
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
@@ -1271,6 +1307,15 @@ msgstr "Địa chỉ email không hợp lệ."
 msgid "Language"
 msgstr "Ngôn ngữ"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Latency"
+msgstr ""
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Latency quality, oldest to newest: {summary}"
+msgstr ""
+
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Layout"
 msgstr "Bố cục"
@@ -1342,6 +1387,12 @@ msgstr "Nhật ký"
 #: src/components/routes/settings/notifications.tsx
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Thay vào đó, bạn đang tìm nơi để tạo cảnh báo? Nhấp vào biểu tượng chuông <0/> trong bảng hệ thống."
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Loss"
+msgstr ""
 
 #: src/components/routes/system/charts/monitors-charts.tsx
 msgctxt "Packet loss"
@@ -1428,6 +1479,10 @@ msgstr "Mô hình"
 msgid "Monitor"
 msgstr "Trình giám sát"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Monitor actions"
+msgstr ""
+
 #: src/components/routes/settings/general.tsx
 msgid "Monitor thresholds"
 msgstr ""
@@ -1435,6 +1490,10 @@ msgstr ""
 #: src/components/network-monitors-table/monitor-dialog.tsx
 msgid "Monitors created"
 msgstr "Đã tạo trình giám sát"
+
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "more monitors"
+msgstr ""
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Mountpoint"
@@ -1507,6 +1566,10 @@ msgstr "Không có dữ liệu chi tiết cho pool này."
 msgid "No logs found."
 msgstr "Không tìm thấy nhật ký."
 
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "No probes"
+msgstr ""
+
 #: src/components/command-palette.tsx
 #: src/components/systemd-table/systemd-table.tsx
 msgid "No results found."
@@ -1515,6 +1578,7 @@ msgstr "Không tìm thấy kết quả."
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
 #: src/components/containers-table/containers-table.tsx
+#: src/components/network-monitors-table/monitor-card-grid.tsx
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/system/package-updates-table.tsx
@@ -1675,6 +1739,10 @@ msgstr "Bản vá"
 msgid "Pause"
 msgstr "Tạm dừng"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "Pause all"
+msgstr ""
+
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Paused"
 msgstr "Đã tạm dừng"
@@ -1805,6 +1873,10 @@ msgstr "Độ sâu hàng đợi"
 #: src/components/routes/settings/quiet-hours.tsx
 msgid "Quiet Hours"
 msgstr "Giờ yên tĩnh"
+
+#: src/components/network-monitors-table/quality-blocks.tsx
+msgid "Range"
+msgstr ""
 
 #: src/components/routes/system/raw-capacity-label.tsx
 #: src/components/routes/system/storage-pools-table.tsx
@@ -2158,6 +2230,10 @@ msgstr "Đổi giao diện"
 msgid "System"
 msgstr "Hệ thống"
 
+#: src/components/network-monitors-table/monitor-card-grid.tsx
+msgid "System details"
+msgstr ""
+
 #: src/components/routes/system/charts/sensor-charts.tsx
 msgid "System fan speeds (RPM)"
 msgstr "Tốc độ quạt hệ thống (RPM)"
@@ -2180,6 +2256,7 @@ msgstr "Các hệ thống"
 msgid "Systems may be managed in a <0>config.yml</0> file inside your data directory."
 msgstr "Các hệ thống có thể được quản lý trong tệp <0>config.yml</0> bên trong thư mục dữ liệu của bạn."
 
+#: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "Table"
 msgstr "Bảng"

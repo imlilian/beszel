@@ -46,6 +46,8 @@ import {
 	ArrowUpDownIcon,
 	ArrowUpIcon,
 	EyeIcon,
+	LayoutGridIcon,
+	LayoutListIcon,
 	LoaderCircleIcon,
 	Settings2Icon,
 	XIcon,
@@ -56,11 +58,18 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useStore } from "@nanostores/react"
+import { useMonitorCardStats } from "@/lib/use-monitor-cards"
+import { getMonitorThresholds } from "@/lib/monitor-thresholds"
+import { MonitorCardGrid } from "./monitor-card-grid"
 import { NetworkMonitorSheet } from "./network-monitor-sheet"
+
+type MonitorViewMode = "table" | "grid"
 
 export default function NetworkMonitorsTableNew({
 	systemId,
@@ -90,6 +99,21 @@ export default function NetworkMonitorsTableNew({
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [pendingDelete, setPendingDelete] = useState<NetworkMonitorRecord[]>([])
 	const [editingMonitor, setEditingMonitor] = useState<NetworkMonitorRecord>()
+	const [viewMode, setViewMode] = useState<MonitorViewMode>(
+		() =>
+			$userSettings.get().monitorViewMode ??
+			(JSON.parse(localStorage.getItem("besz-monitor-view") || "null") as MonitorViewMode | null) ??
+			"table"
+	)
+	// The sheet is shared by both views, so its state lives here rather than in either one.
+	const [sheetOpen, setSheetOpen] = useState(false)
+	const [activeMonitorId, setActiveMonitorId] = useState<string | null>(null)
+	const settings = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
+	const systems = useStore($allSystemsById)
+	const thresholds = useMemo(
+		() => getMonitorThresholds(settings),
+		[settings.monitorWarnMs, settings.monitorCritMs]
+	)
 
 	const { toast } = useToast()
 	const canManageMonitors = !isReadOnlyUser()
@@ -97,7 +121,7 @@ export default function NetworkMonitorsTableNew({
 	// Apply settings from server once they load (handles incognito / new devices)
 	const appliedSettings = useRef(new Set<string>())
 	useEffect(() => {
-		return subscribeKeys($userSettings, ["monitorCols", sortSettingsKey], (vals) => {
+		return subscribeKeys($userSettings, ["monitorCols", sortSettingsKey, "monitorViewMode"], (vals) => {
 			if (!appliedSettings.current.has("monitorCols") && vals.monitorCols !== undefined) {
 				appliedSettings.current.add("monitorCols")
 				setColumnVisibility(vals.monitorCols)
@@ -105,6 +129,10 @@ export default function NetworkMonitorsTableNew({
 			if (!appliedSettings.current.has(sortSettingsKey) && vals[sortSettingsKey] !== undefined) {
 				appliedSettings.current.add(sortSettingsKey)
 				setSorting(vals[sortSettingsKey] as SortingState)
+			}
+			if (!appliedSettings.current.has("monitorViewMode") && vals.monitorViewMode !== undefined) {
+				appliedSettings.current.add("monitorViewMode")
+				setViewMode(vals.monitorViewMode)
 			}
 		})
 	}, [sortSettingsKey])
@@ -135,6 +163,14 @@ export default function NetworkMonitorsTableNew({
 		},
 		[sortSettingsKey, sortStorageKey, resetPageIndex]
 	)
+
+	const handleViewModeChange = useCallback((value: string) => {
+		const next = value as MonitorViewMode
+		setViewMode(next)
+		localStorage.setItem("besz-monitor-view", JSON.stringify(next))
+		$userSettings.setKey("monitorViewMode", next)
+		queueUserSettings({ monitorViewMode: next })
+	}, [])
 
 	const runMonitorBatch = useCallback(
 		async (ids: string[], enqueue: (batch: ReturnType<typeof pb.createBatch>, id: string) => void) => {
@@ -280,6 +316,30 @@ export default function NetworkMonitorsTableNew({
 	const visibleColumns = table.getVisibleLeafColumns()
 	const visibleColumnsKey = visibleColumns.map((column) => column.id).join(",")
 
+	const cardMonitors = useMemo(() => rows.map((row) => row.original), [rows])
+	const blocksByMonitor = useMonitorCardStats({
+		monitors: cardMonitors,
+		thresholds,
+		enabled: viewMode === "grid",
+	})
+	const activeMonitor = activeMonitorId ? monitors.find((monitor) => monitor.id === activeMonitorId) : undefined
+	const openSheet = useCallback((monitor: NetworkMonitorRecord) => {
+		setActiveMonitorId(monitor.id)
+		setSheetOpen(true)
+	}, [])
+	// "+N more" jumps to the table view with this system's monitors filtered.
+	const showSystemInTable = useCallback(
+		(systemId: string) => {
+			handleViewModeChange("table")
+			const name = $allSystemsById.get()[systemId]?.name
+			if (name) {
+				table.setGlobalFilter(name)
+			}
+			resetPageIndex()
+		},
+		[handleViewModeChange, resetPageIndex, table]
+	)
+
 	return (
 		<Card className="@container w-full px-3 py-5 sm:py-6 sm:px-6">
 			<CardHeader className="p-0 mb-3 sm:mb-4">
@@ -322,63 +382,93 @@ export default function NetworkMonitorsTableNew({
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="h-72 md:h-auto min-w-48 md:min-w-auto overflow-y-auto">
-								<div className="grid grid-cols-2 divide-y md:divide-s md:divide-y-0">
+								<div
+									className={cn(
+										"grid divide-y md:divide-s md:divide-y-0",
+										viewMode === "table" ? "grid-cols-3" : "grid-cols-1"
+									)}
+								>
 									<div className="border-r">
 										<DropdownMenuLabel className="pt-2 px-3.5 flex items-center gap-2">
-											<ArrowUpDownIcon className="size-4" />
-											<Trans>Sort By</Trans>
+											<LayoutGridIcon className="size-4" />
+											<Trans>Layout</Trans>
 										</DropdownMenuLabel>
 										<DropdownMenuSeparator />
-										<div className="px-1 pb-1">
-											{table.getAllColumns().map((column) => {
-												if (!column.getCanSort()) return null
-												let Icon = <span className="w-6"></span>
-												if (sorting[0]?.id === column.id) {
-													Icon = sorting[0]?.desc ? (
-														<ArrowUpIcon className="me-2 size-4" />
-													) : (
-														<ArrowDownIcon className="me-2 size-4" />
-													)
-												}
-												return (
-													<DropdownMenuItem
-														onSelect={(e) => {
-															e.preventDefault()
-															handleSortingChange([
-																{ id: column.id, desc: sorting[0]?.id === column.id && !sorting[0]?.desc },
-															])
-														}}
-														key={column.id}
-													>
-														{Icon}
-														{column.columnDef.meta?.label ?? column.id}
-													</DropdownMenuItem>
-												)
-											})}
-										</div>
+										<DropdownMenuRadioGroup
+											className="px-1 pb-1"
+											value={viewMode}
+											onValueChange={handleViewModeChange}
+										>
+											<DropdownMenuRadioItem value="table" onSelect={(e) => e.preventDefault()} className="gap-2">
+												<LayoutListIcon className="size-4" />
+												<Trans>Table</Trans>
+											</DropdownMenuRadioItem>
+											<DropdownMenuRadioItem value="grid" onSelect={(e) => e.preventDefault()} className="gap-2">
+												<LayoutGridIcon className="size-4" />
+												<Trans>Grid</Trans>
+											</DropdownMenuRadioItem>
+										</DropdownMenuRadioGroup>
 									</div>
-									<div>
-										<DropdownMenuLabel className="pt-2 px-3.5 flex items-center gap-2">
-											<EyeIcon className="size-4" />
-											<Trans>Visible Fields</Trans>
-										</DropdownMenuLabel>
-										<DropdownMenuSeparator />
-										<div className="px-1.5 pb-1">
-											{table
-												.getAllColumns()
-												.filter((column) => column.getCanHide())
-												.map((column) => (
-													<DropdownMenuCheckboxItem
-														key={column.id}
-														onSelect={(e) => e.preventDefault()}
-														checked={column.getIsVisible()}
-														onCheckedChange={(value) => column.toggleVisibility(!!value)}
-													>
-														{column.columnDef.meta?.label ?? column.id}
-													</DropdownMenuCheckboxItem>
-												))}
-										</div>
-									</div>
+									{viewMode === "table" && (
+										<>
+											<div className="border-r">
+												<DropdownMenuLabel className="pt-2 px-3.5 flex items-center gap-2">
+													<ArrowUpDownIcon className="size-4" />
+													<Trans>Sort By</Trans>
+												</DropdownMenuLabel>
+												<DropdownMenuSeparator />
+												<div className="px-1 pb-1">
+													{table.getAllColumns().map((column) => {
+														if (!column.getCanSort()) return null
+														let Icon = <span className="w-6"></span>
+														if (sorting[0]?.id === column.id) {
+															Icon = sorting[0]?.desc ? (
+																<ArrowUpIcon className="me-2 size-4" />
+															) : (
+																<ArrowDownIcon className="me-2 size-4" />
+															)
+														}
+														return (
+															<DropdownMenuItem
+																onSelect={(e) => {
+																	e.preventDefault()
+																	handleSortingChange([
+																		{ id: column.id, desc: sorting[0]?.id === column.id && !sorting[0]?.desc },
+																	])
+																}}
+																key={column.id}
+															>
+																{Icon}
+																{column.columnDef.meta?.label ?? column.id}
+															</DropdownMenuItem>
+														)
+													})}
+												</div>
+											</div>
+											<div>
+												<DropdownMenuLabel className="pt-2 px-3.5 flex items-center gap-2">
+													<EyeIcon className="size-4" />
+													<Trans>Visible Fields</Trans>
+												</DropdownMenuLabel>
+												<DropdownMenuSeparator />
+												<div className="px-1.5 pb-1">
+													{table
+														.getAllColumns()
+														.filter((column) => column.getCanHide())
+														.map((column) => (
+															<DropdownMenuCheckboxItem
+																key={column.id}
+																onSelect={(e) => e.preventDefault()}
+																checked={column.getIsVisible()}
+																onCheckedChange={(value) => column.toggleVisibility(!!value)}
+															>
+																{column.columnDef.meta?.label ?? column.id}
+															</DropdownMenuCheckboxItem>
+														))}
+												</div>
+											</div>
+										</>
+									)}
 								</div>
 							</DropdownMenuContent>
 						</DropdownMenu>
@@ -429,18 +519,41 @@ export default function NetworkMonitorsTableNew({
 					</div>
 				</div>
 			</CardHeader>
-			<div className="rounded-md">
-				<NetworkMonitorsTable
-					table={table}
-					rows={rows}
-					colLength={visibleColumns.length}
-					visibleColumnsKey={visibleColumnsKey}
-					rowSelection={rowSelection}
-					isLoading={isLoading}
-					includesAllSystems={!systemId}
+			{viewMode === "table" ? (
+				<div className="rounded-md">
+					<NetworkMonitorsTable
+						table={table}
+						rows={rows}
+						colLength={visibleColumns.length}
+						visibleColumnsKey={visibleColumnsKey}
+						rowSelection={rowSelection}
+						isLoading={isLoading}
+						openSheet={openSheet}
+					/>
+				</div>
+			) : isLoading ? (
+				<div className="py-8 text-center">
+					<LoaderCircleIcon className="animate-spin size-10 opacity-60 mx-auto" />
+				</div>
+			) : (
+				<MonitorCardGrid
+					monitors={cardMonitors}
+					blocksByMonitor={blocksByMonitor}
+					thresholds={thresholds}
+					systems={systems}
+					canManage={canManageMonitors}
+					onOpenSheet={openSheet}
+					onShowSystemInTable={showSystemInTable}
 				/>
-			</div>
+			)}
 			<DataTablePagination table={table} />
+			<NetworkMonitorSheet
+				open={sheetOpen}
+				onOpenChange={setSheetOpen}
+				monitor={activeMonitor}
+				monitors={monitors}
+				includesAllSystems={!systemId}
+			/>
 		</Card>
 	)
 }
@@ -452,7 +565,7 @@ const NetworkMonitorsTable = memo(function NetworkMonitorTable({
 	visibleColumnsKey,
 	rowSelection,
 	isLoading,
-	includesAllSystems,
+	openSheet,
 }: {
 	table: TableType<NetworkMonitorRecord>
 	rows: Row<NetworkMonitorRecord>[]
@@ -460,19 +573,8 @@ const NetworkMonitorsTable = memo(function NetworkMonitorTable({
 	visibleColumnsKey: string
 	rowSelection: RowSelectionState
 	isLoading: boolean
-	/** The table lists every system's monitors, so the sheet can compare without fetching. */
-	includesAllSystems: boolean
+	openSheet: (monitor: NetworkMonitorRecord) => void
 }) {
-	const [sheetOpen, setSheetOpen] = useState(false)
-	const [activeMonitorId, setActiveMonitorId] = useState<string | null>(null)
-	const activeMonitor = activeMonitorId
-		? table.options.data.find((monitor) => monitor.id === activeMonitorId)
-		: undefined
-	const openSheet = useCallback((monitor: NetworkMonitorRecord) => {
-		setActiveMonitorId(monitor.id)
-		setSheetOpen(true)
-	}, [])
-
 	return (
 		<div className="max-w-full relative overflow-auto border rounded-md">
 			<table className="text-sm w-full h-full text-nowrap">
@@ -504,15 +606,6 @@ const NetworkMonitorsTable = memo(function NetworkMonitorTable({
 					)}
 				</TableBody>
 			</table>
-			<NetworkMonitorSheet
-				open={sheetOpen}
-				onOpenChange={(nextOpen) => {
-					setSheetOpen(nextOpen)
-				}}
-				monitor={activeMonitor}
-				monitors={table.options.data}
-				includesAllSystems={includesAllSystems}
-			/>
 		</div>
 	)
 })
