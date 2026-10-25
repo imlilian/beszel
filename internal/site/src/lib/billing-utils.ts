@@ -122,6 +122,56 @@ export function getTrafficState(limit: number, used: number, periodEndMs: number
 }
 
 /* ------------------------------------------------------------------ */
+/* Traffic units                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Units offered in the traffic tab. `trafficLimit` is always stored in bytes. */
+export const TRAFFIC_UNITS = ["MB", "GB", "TB", "PB"] as const
+export type TrafficUnit = (typeof TRAFFIC_UNITS)[number]
+
+const UNIT_BYTES: Record<TrafficUnit, number> = {
+	MB: 1024 ** 2,
+	GB: 1024 ** 3,
+	TB: 1024 ** 4,
+	PB: 1024 ** 5,
+}
+
+/** Display value -> bytes, rounded to whole bytes. Non-positive input means "no limit". */
+export function trafficToBytes(value: number, unit: TrafficUnit): number {
+	if (!Number.isFinite(value) || value <= 0) return 0
+	return Math.round(value * UNIT_BYTES[unit])
+}
+
+/**
+ * Bytes -> display value in `unit`. Truncated to 6 decimals so switching units
+ * back and forth (or a value that is not a whole multiple) does not produce a
+ * long float tail in the input.
+ */
+export function trafficFromBytes(bytes: number, unit: TrafficUnit): number {
+	if (!Number.isFinite(bytes) || bytes <= 0) return 0
+	return Number((bytes / UNIT_BYTES[unit]).toFixed(6))
+}
+
+/**
+ * Pick the largest unit that represents `bytes` exactly, so a 1 TB quota shows
+ * as `1 TB` and 1.5 TB as `1536 GB`. Defaults to GB for anything unrepresentable.
+ */
+export function pickTrafficUnit(bytes: number): TrafficUnit {
+	if (!Number.isFinite(bytes) || bytes <= 0) return "GB"
+	for (let i = TRAFFIC_UNITS.length - 1; i >= 0; i--) {
+		const unit = TRAFFIC_UNITS[i]
+		if (bytes % UNIT_BYTES[unit] === 0) return unit
+	}
+	return "GB"
+}
+
+/** Progress-bar severity. `<80` ok, `80..99` warn, `>=100` crit (matches the PRD). */
+export function getTrafficSeverity(pct: number): "ok" | "warn" | "crit" {
+	if (!Number.isFinite(pct) || pct < 80) return "ok"
+	return pct >= 100 ? "crit" : "warn"
+}
+
+/* ------------------------------------------------------------------ */
 /* Date helpers (PB stores dates as "2026-03-14 00:00:00.000Z")        */
 /* ------------------------------------------------------------------ */
 

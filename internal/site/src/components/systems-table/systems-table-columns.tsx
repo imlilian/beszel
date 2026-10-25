@@ -28,7 +28,8 @@ import { memo, useMemo, useRef, useState } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { isReadOnlyUser, pb } from "@/lib/api"
 import { BatteryState, ConnectionType, connectionTypeLabels, MeterState, SystemStatus } from "@/lib/enums"
-import { BillingDialog, BillingSummary } from "./billing-dialog"
+import { BillingSummary } from "./billing-dialog"
+import { openBillingDialog } from "@/lib/billing"
 import { $userSettings } from "@/lib/stores"
 import {
 	cn,
@@ -592,7 +593,13 @@ export function SystemsTableColumns(viewMode: "table" | "grid"): ColumnDef<Syste
 			enableHiding: true,
 			size: 0,
 			hideSort: true,
-			cell: (info) => <BillingSummary systemId={info.row.original.id} bordered={false} />,
+			cell: (info) => (
+				<BillingSummary
+					systemId={info.row.original.id}
+					paused={info.row.original.status === SystemStatus.Paused}
+					bordered={false}
+				/>
+			),
 		},
 		{
 			id: "actions",
@@ -771,7 +778,6 @@ export function IndicatorDot({ system, className }: { system: SystemRecord; clas
 export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [editOpen, setEditOpen] = useState(false)
-	const [billingOpen, setBillingOpen] = useState(false)
 	const editOpened = useRef(false)
 	const { t } = useLingui()
 	const { id, status, host, name } = system
@@ -803,7 +809,8 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 						<DropdownMenuItem
 							onSelect={(e) => {
 								e.preventDefault()
-								setBillingOpen(true)
+								// Hosted once by the systems table, not per row.
+								openBillingDialog(id)
 							}}
 						>
 							<WalletIcon className="me-2.5 size-4" />
@@ -848,8 +855,7 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 				<Dialog open={editOpen} onOpenChange={setEditOpen}>
 					{editOpened.current && <SystemDialog system={system} setOpen={setEditOpen} />}
 				</Dialog>
-				{/* billing & traffic dialog */}
-				<BillingDialog system={system} open={billingOpen} onOpenChange={setBillingOpen} />
+				{/* billing & traffic dialog lives in systems-table.tsx (one per page) */}
 				{/* deletion dialog */}
 				<AlertDialog open={deleteOpen} onOpenChange={(open) => setDeleteOpen(open)}>
 					<AlertDialogContent>
@@ -879,5 +885,5 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 				</AlertDialog>
 			</>
 		)
-	}, [id, status, host, name, system, t, deleteOpen, editOpen, billingOpen])
+	}, [id, status, host, name, system, t, deleteOpen, editOpen])
 })

@@ -37,7 +37,7 @@ export interface TrafficRecord extends RecordModel {
 	usedDownload: number
 	/** Excluded from TRAFFIC_FIELDS (a per-interface counters blob); absent in UI reads. */
 	lastCounters?: Record<string, [number, number]>
-	/** Excluded from TRAFFIC_FIELDS; absent in UI reads. */
+	/** Timestamp of the last sample that moved the counters ("" before the first one). */
 	lastSampleAt?: string
 	lastResetAt: string
 	resetReason: string
@@ -48,13 +48,32 @@ export const $billingBySystemId = atom<Record<string, BillingRecord>>({})
 /** systemId -> traffic counters. Empty until useBillingSync() runs. */
 export const $trafficBySystemId = atom<Record<string, TrafficRecord>>({})
 
+export type BillingTab = "cost" | "traffic"
+
+/**
+ * Which system's billing dialog should be open, and on which tab. The dialog is
+ * hosted once by the systems table; both the row menu and the card's traffic bar
+ * only publish a request, so there is one dialog instance for the whole page
+ * instead of one per row.
+ */
+export const $billingDialogRequest = atom<{ systemId: string; tab: BillingTab } | null>(null)
+
+export function openBillingDialog(systemId: string, tab: BillingTab = "cost") {
+	$billingDialogRequest.set({ systemId, tab })
+}
+
+export function closeBillingDialog() {
+	$billingDialogRequest.set(null)
+}
+
 // The UI reads the cost/traffic fields; the reminder bookkeeping is cheap and
 // kept so the BillingRecord type stays honest for every fetched record.
 const BILLING_FIELDS =
 	"system,billingType,price,currency,cycle,paidAt,expiresAt,notifyDaysBefore,remindLevel,remindAt,trafficLimit,trafficMode,resetDay,trafficAlerts,trafficRemindLevel,manualResetAt"
-// `lastCounters` (per-interface blob) and `lastSampleAt` are intentionally not
-// fetched; they are optional on TrafficRecord and unused by the UI.
-const TRAFFIC_FIELDS = "system,periodStart,periodEnd,usedUpload,usedDownload,lastResetAt,resetReason"
+// `lastSampleAt` feeds the traffic tooltip ("last sample …"). `lastCounters` (a
+// per-interface blob) is the only field left out: it is large, updated every
+// minute, and never displayed.
+const TRAFFIC_FIELDS = "system,periodStart,periodEnd,usedUpload,usedDownload,lastSampleAt,lastResetAt,resetReason"
 
 /**
  * Fetch every billing config + traffic counter once, then keep both stores in

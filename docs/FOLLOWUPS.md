@@ -25,3 +25,6 @@
 - [ ] P8 — 采样事务里多了 2 次查询（`system_billing` + `system_traffic`）和 1 次写，每系统每分钟一次。个人规模无感；系统数 >100 时考虑把 billing 配置放进内存缓存。
 - [ ] P8 — 只统计 `trafficLimit > 0` 的系统：先不限额、后设限额时，历史用量从设置那一刻起算（前端本来就只在有上限时渲染 `TrafficBar`，语义一致）。→ 若将来要"无限额也留历史"，把 `AccumulateTraffic` 的 `TrafficLimit <= 0` 提前返回去掉即可，代价是每个系统每分钟多一次写。
 - [ ] P8 — 依赖 Agent 上报 `Stats.NetworkInterfaces`（累计计数器）。0.13.0 之前的老 Agent 没有该字段，永远不累计；升级 Agent 后首个采样点只建基线。
+- [ ] P9 — 流量 Tab 的「立即重置」在**没有 `system_traffic` 记录**时整块面板不渲染（因此没有按钮）。→ 若要允许"提前建记录"，让 `AccumulateTraffic` 在 `trafficLimit > 0` 时即使无网卡也建一条空记录即可（代价：老 Agent 会有一条全 0 的记录）。
+- [ ] P9 — `TrafficUsage` 的剩余时间是整天粒度（`getTrafficState.daysLeft`），PRD §5.5 草图写的是「18 天 6 小时」。→ 需要精确到小时时，改成直接对 `periodEnd - now` 做 `ms → d/h` 拆分（注意跨夏令时）。
+- [ ] P9 — 未做人工验收（造 500MB 流量、停 Hub 2 小时、重启被监控机、跨重置日、手动重置）。→ 需要真实 hub + agent；纯函数与后端逻辑已被 `bun test` / `go test` 覆盖。

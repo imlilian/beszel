@@ -497,6 +497,7 @@ msgstr "可停止"
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Cancel"
 msgstr "取消"
@@ -983,8 +984,14 @@ msgid "Down ({downSystemsLength})"
 msgstr "离线 ({downSystemsLength})"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Download"
 msgstr "下载"
+
+#. placeholder {0}: fmt(traffic.usedDownload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Download {0}"
+msgstr "下载 {0}"
 
 #: src/components/alerts-history-columns.tsx
 msgid "Duration"
@@ -1430,6 +1437,14 @@ msgstr "无效的电子邮件地址。"
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "语言"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample"
+msgstr "上次采样"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample {lastSample}"
+msgstr "上次采样 {lastSample}"
 
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "Latency"
@@ -1887,6 +1902,10 @@ msgstr "全部暂停"
 msgid "Paused"
 msgstr "已暂停"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paused — traffic is not counted"
+msgstr "已暂停 — 暂停期间不计流量"
+
 #: src/components/systems-table/systems-table.tsx
 msgid "Paused ({pausedSystemsLength})"
 msgstr "已暂停 ({pausedSystemsLength})"
@@ -1955,6 +1974,10 @@ msgstr "请参阅<0>文档</0>以获取说明。"
 #: src/components/login/login.tsx
 msgid "Please sign in to your account"
 msgstr "请登录您的账户"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Please try again."
+msgstr "请重试。"
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Pool Health"
@@ -2089,16 +2112,42 @@ msgid "Requires"
 msgstr "需要"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset"
+msgstr "重置"
+
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Reset day"
 msgstr "重置日"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset failed"
+msgstr "重置失败"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset now"
+msgstr "立即重置"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
 msgstr "重置密码"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset scheduled. It applies on the next sample, within a minute."
+msgstr "已安排重置，将在下一次采样时生效（1 分钟内）。"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset traffic usage now?"
+msgstr "立即重置流量用量？"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "resets in {daysLeft} days"
 msgstr "{daysLeft} 天后重置"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets today"
+msgstr "今天重置"
 
 #: src/components/alerts-history-columns.tsx
 #: src/components/alerts-history-columns.tsx
@@ -2495,6 +2544,10 @@ msgstr "测试 heartbeat"
 msgid "Test notification sent"
 msgstr "测试通知已发送"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "The current period's upload and download counters go back to zero. The billing period itself is not changed. The reset applies on the next sample, within a minute."
+msgstr "本周期的上传、下载用量都会清零，计费周期本身不变。重置会在下一次采样时生效（1 分钟内）。"
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "The overall status is <0>ok</0> when all systems are up, <1>warn</1> when alerts are triggered, and <2>error</2> when any system is down."
 msgstr "当所有系统都正常运行时，整体状态为 <0>ok</0>；当触发警报时为 <1>警告</1>；当任何系统故障时为 <2>错误</2>。"
@@ -2506,6 +2559,10 @@ msgstr "然后登录到后台并在用户表中重置您的用户账户密码。
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "此操作无法撤销。这将永久删除数据库中{name}的所有当前记录。"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "This period"
+msgstr "本周期"
 
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -2596,6 +2653,13 @@ msgstr "流量上限"
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic mode"
 msgstr "流量模式"
+
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic: {0} of {1} used"
+msgstr "流量：已用 {0} / {1}"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Triennial"
@@ -2761,8 +2825,14 @@ msgid "Updates"
 msgstr "更新"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Upload"
 msgstr "上传"
+
+#. placeholder {0}: fmt(traffic.usedUpload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload {0}"
+msgstr "上传 {0}"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Upload + download"
@@ -2803,9 +2873,16 @@ msgstr "用于自签名证书。"
 msgid "Used"
 msgstr "已用"
 
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Used {usedStr} / {limitStr}"
-msgstr "已用 {usedStr} / {limitStr}"
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {0} / {1}"
+msgstr "已用 {0} / {1}"
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Used {usedStr} / {limitStr}"
+#~ msgstr "已用 {usedStr} / {limitStr}"
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx

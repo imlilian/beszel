@@ -492,6 +492,7 @@ msgstr "Can stop"
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Cancel"
 msgstr "Cancel"
@@ -978,8 +979,14 @@ msgid "Down ({downSystemsLength})"
 msgstr "Down ({downSystemsLength})"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Download"
 msgstr "Download"
+
+#. placeholder {0}: fmt(traffic.usedDownload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Download {0}"
+msgstr "Download {0}"
 
 #: src/components/alerts-history-columns.tsx
 msgid "Duration"
@@ -1425,6 +1432,14 @@ msgstr "Invalid email address."
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Language"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample"
+msgstr "Last sample"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample {lastSample}"
+msgstr "Last sample {lastSample}"
 
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "Latency"
@@ -1882,6 +1897,10 @@ msgstr "Pause all"
 msgid "Paused"
 msgstr "Paused"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paused — traffic is not counted"
+msgstr "Paused — traffic is not counted"
+
 #: src/components/systems-table/systems-table.tsx
 msgid "Paused ({pausedSystemsLength})"
 msgstr "Paused ({pausedSystemsLength})"
@@ -1950,6 +1969,10 @@ msgstr "Please see <0>the documentation</0> for instructions."
 #: src/components/login/login.tsx
 msgid "Please sign in to your account"
 msgstr "Please sign in to your account"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Please try again."
+msgstr "Please try again."
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Pool Health"
@@ -2084,16 +2107,42 @@ msgid "Requires"
 msgstr "Requires"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset"
+msgstr "Reset"
+
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Reset day"
 msgstr "Reset day"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset failed"
+msgstr "Reset failed"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset now"
+msgstr "Reset now"
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
 msgstr "Reset Password"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset scheduled. It applies on the next sample, within a minute."
+msgstr "Reset scheduled. It applies on the next sample, within a minute."
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset traffic usage now?"
+msgstr "Reset traffic usage now?"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "resets in {daysLeft} days"
 msgstr "resets in {daysLeft} days"
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets today"
+msgstr "resets today"
 
 #: src/components/alerts-history-columns.tsx
 #: src/components/alerts-history-columns.tsx
@@ -2490,6 +2539,10 @@ msgstr "Test heartbeat"
 msgid "Test notification sent"
 msgstr "Test notification sent"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "The current period's upload and download counters go back to zero. The billing period itself is not changed. The reset applies on the next sample, within a minute."
+msgstr "The current period's upload and download counters go back to zero. The billing period itself is not changed. The reset applies on the next sample, within a minute."
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "The overall status is <0>ok</0> when all systems are up, <1>warn</1> when alerts are triggered, and <2>error</2> when any system is down."
 msgstr "The overall status is <0>ok</0> when all systems are up, <1>warn</1> when alerts are triggered, and <2>error</2> when any system is down."
@@ -2501,6 +2554,10 @@ msgstr "Then log into the backend and reset your user account password in the us
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "This action cannot be undone. This will permanently delete all current records for {name} from the database."
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "This period"
+msgstr "This period"
 
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -2591,6 +2648,13 @@ msgstr "Traffic limit"
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic mode"
 msgstr "Traffic mode"
+
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic: {0} of {1} used"
+msgstr "Traffic: {0} of {1} used"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Triennial"
@@ -2756,8 +2820,14 @@ msgid "Updates"
 msgstr "Updates"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Upload"
 msgstr "Upload"
+
+#. placeholder {0}: fmt(traffic.usedUpload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload {0}"
+msgstr "Upload {0}"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Upload + download"
@@ -2798,9 +2868,16 @@ msgstr "Use for self-signed certificates."
 msgid "Used"
 msgstr "Used"
 
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Used {usedStr} / {limitStr}"
-msgstr "Used {usedStr} / {limitStr}"
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {0} / {1}"
+msgstr "Used {0} / {1}"
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Used {usedStr} / {limitStr}"
+#~ msgstr "Used {usedStr} / {limitStr}"
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx

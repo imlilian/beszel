@@ -54,8 +54,8 @@ import AlertButton from "../alerts/alert-button"
 import { $router, Link } from "../router"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { SystemsTableColumns, ActionsButton, IndicatorDot } from "./systems-table-columns"
-import { BillingSummary } from "./billing-dialog"
-import { useBillingSync } from "@/lib/billing"
+import { BillingDialog, BillingSummary } from "./billing-dialog"
+import { $billingDialogRequest, closeBillingDialog, useBillingSync } from "@/lib/billing"
 
 type ViewMode = "table" | "grid"
 type StatusFilter = "all" | SystemRecord["status"]
@@ -167,6 +167,11 @@ export default function SystemsTable() {
 
 	// Pull billing + traffic records once and keep them in sync (P6).
 	useBillingSync()
+
+	// One dialog for the whole page: the row menu and the card's traffic bar only
+	// publish a request (system + tab) into this atom.
+	const billingRequest = useStore($billingDialogRequest)
+	const billingSystem = billingRequest ? data.find((system) => system.id === billingRequest.systemId) : undefined
 
 	// Filter data based on status filter
 	const filteredData = useMemo(() => {
@@ -427,6 +432,16 @@ export default function SystemsTable() {
 				</div>
 			)}
 			<DataTablePagination table={table} showSelected={false} />
+			{billingSystem && (
+				<BillingDialog
+					system={billingSystem}
+					open
+					initialTab={billingRequest?.tab ?? "cost"}
+					onOpenChange={(open) => {
+						if (!open) closeBillingDialog()
+					}}
+				/>
+			)}
 		</Card>
 	)
 }
@@ -589,7 +604,7 @@ const SystemCard = memo(
 								)
 							})}
 						</div>
-						<BillingSummary systemId={system.id} />
+						<BillingSummary systemId={system.id} paused={system.status === SystemStatus.Paused} />
 					</CardContent>
 					<Link
 						href={getPagePath($router, "system", { id: row.original.id })}

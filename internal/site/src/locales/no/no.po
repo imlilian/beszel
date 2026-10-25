@@ -497,6 +497,7 @@ msgstr "Kan stoppe"
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Cancel"
 msgstr "Avbryt"
@@ -983,8 +984,14 @@ msgid "Down ({downSystemsLength})"
 msgstr "Nede ({downSystemsLength})"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Download"
 msgstr "Last ned"
+
+#. placeholder {0}: fmt(traffic.usedDownload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Download {0}"
+msgstr ""
 
 #: src/components/alerts-history-columns.tsx
 msgid "Duration"
@@ -1430,6 +1437,14 @@ msgstr "Ugyldig e-postadresse."
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Språk"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample {lastSample}"
+msgstr ""
 
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "Latency"
@@ -1887,6 +1902,10 @@ msgstr ""
 msgid "Paused"
 msgstr "Satt på Pause"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paused — traffic is not counted"
+msgstr ""
+
 #: src/components/systems-table/systems-table.tsx
 msgid "Paused ({pausedSystemsLength})"
 msgstr "Pauset ({pausedSystemsLength})"
@@ -1955,6 +1974,10 @@ msgstr "Vennligst se <0>dokumentasjonen</0> for instrukser."
 #: src/components/login/login.tsx
 msgid "Please sign in to your account"
 msgstr "Vennligst logg inn på kontoen din"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Please try again."
+msgstr ""
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Pool Health"
@@ -2089,7 +2112,19 @@ msgid "Requires"
 msgstr "Påkrevd"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Reset day"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset failed"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset now"
 msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
@@ -2097,7 +2132,21 @@ msgid "Reset Password"
 msgstr "Nullstill Passord"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset scheduled. It applies on the next sample, within a minute."
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset traffic usage now?"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "resets in {daysLeft} days"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets today"
 msgstr ""
 
 #: src/components/alerts-history-columns.tsx
@@ -2495,6 +2544,10 @@ msgstr "Test-hjerteslag"
 msgid "Test notification sent"
 msgstr "Test-varsling sendt"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "The current period's upload and download counters go back to zero. The billing period itself is not changed. The reset applies on the next sample, within a minute."
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "The overall status is <0>ok</0> when all systems are up, <1>warn</1> when alerts are triggered, and <2>error</2> when any system is down."
 msgstr "Den generelle statusen er <0>ok</0> når alle systemer er oppe, <1>varsel</1> når varsler utløses, og <2>feil</2> når et system er nede."
@@ -2506,6 +2559,10 @@ msgstr "Logg deretter inn i backend og nullstill passordet på din konto i users
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "Denne handlingen kan ikke omgjøres. Dette vil slette alle poster for {name} permanent fra databasen."
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "This period"
+msgstr ""
 
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -2595,6 +2652,13 @@ msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic mode"
+msgstr ""
+
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic: {0} of {1} used"
 msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
@@ -2761,8 +2825,14 @@ msgid "Updates"
 msgstr "Oppdateringer"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Upload"
 msgstr "Last opp"
+
+#. placeholder {0}: fmt(traffic.usedUpload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload {0}"
+msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Upload + download"
@@ -2803,9 +2873,16 @@ msgstr "Brukes for selvsignerte sertifikater."
 msgid "Used"
 msgstr "Brukt"
 
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Used {usedStr} / {limitStr}"
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {0} / {1}"
 msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Used {usedStr} / {limitStr}"
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx

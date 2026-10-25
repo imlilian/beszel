@@ -6,7 +6,11 @@ import {
 	getBillingExpiryState,
 	getExpirySeverity,
 	getExpiryState,
+	getTrafficSeverity,
 	getTrafficState,
+	pickTrafficUnit,
+	trafficFromBytes,
+	trafficToBytes,
 } from "./billing-utils"
 
 describe("formatPrice", () => {
@@ -115,6 +119,47 @@ describe("getTrafficState", () => {
 		expect(s.pct).toBe(0)
 		expect(s.exceeded).toBe(false)
 		expect(s.daysLeft).toBe(0)
+	})
+})
+
+describe("traffic units", () => {
+	test("converts between display units and bytes", () => {
+		expect(trafficToBytes(1, "GB")).toBe(1024 ** 3)
+		expect(trafficToBytes(1.5, "TB")).toBe(1.5 * 1024 ** 4)
+		expect(trafficFromBytes(1024 ** 3, "GB")).toBe(1)
+		expect(trafficFromBytes(1536 * 1024 ** 3, "TB")).toBe(1.5)
+	})
+	test("non-positive / invalid input means no limit", () => {
+		expect(trafficToBytes(0, "GB")).toBe(0)
+		expect(trafficToBytes(-5, "GB")).toBe(0)
+		expect(trafficToBytes(Number.NaN, "GB")).toBe(0)
+		expect(trafficFromBytes(0, "GB")).toBe(0)
+		expect(trafficFromBytes(Number.NaN, "GB")).toBe(0)
+	})
+	test("round trip keeps the byte value", () => {
+		const bytes = trafficToBytes(2, "TB")
+		expect(trafficToBytes(trafficFromBytes(bytes, "GB"), "GB")).toBe(bytes)
+	})
+	test("picks the largest exact unit", () => {
+		expect(pickTrafficUnit(1024 ** 3)).toBe("GB")
+		expect(pickTrafficUnit(1024 ** 4)).toBe("TB")
+		expect(pickTrafficUnit(1024 ** 5)).toBe("PB")
+		expect(pickTrafficUnit(1024 ** 2)).toBe("MB")
+		// 1.5 TB has no exact TB representation, so GB is used instead.
+		expect(pickTrafficUnit(1.5 * 1024 ** 4)).toBe("GB")
+		expect(pickTrafficUnit(0)).toBe("GB")
+	})
+})
+
+describe("getTrafficSeverity", () => {
+	test("bands match the PRD (<80 ok, 80-99 warn, >=100 crit)", () => {
+		expect(getTrafficSeverity(0)).toBe("ok")
+		expect(getTrafficSeverity(79.9)).toBe("ok")
+		expect(getTrafficSeverity(80)).toBe("warn")
+		expect(getTrafficSeverity(99.9)).toBe("warn")
+		expect(getTrafficSeverity(100)).toBe("crit")
+		expect(getTrafficSeverity(140)).toBe("crit")
+		expect(getTrafficSeverity(Number.NaN)).toBe("ok")
 	})
 })
 

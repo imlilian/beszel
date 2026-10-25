@@ -1,7 +1,17 @@
 import { Trans, useLingui } from "@lingui/react/macro"
 import { useStore } from "@nanostores/react"
-import { WalletIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { RotateCcwIcon, WalletIcon } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -9,15 +19,18 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "@/components/ui/use-toast"
 import { isReadOnlyUser, pb } from "@/lib/api"
 import {
 	$billingBySystemId,
 	$trafficBySystemId,
 	type BillingRecord,
+	type BillingTab,
 	type BillingType,
 	type Currency,
 	type Cycle,
+	openBillingDialog,
 	type TrafficMode,
 	type TrafficRecord,
 } from "@/lib/billing"
@@ -27,12 +40,18 @@ import {
 	fromDateInputValue,
 	getBillingExpiryState,
 	getExpirySeverity,
+	getTrafficSeverity,
 	getTrafficState,
+	pickTrafficUnit,
 	parsePbDate,
+	TRAFFIC_UNITS,
+	type TrafficUnit,
 	toDateInputValue,
+	trafficFromBytes,
+	trafficToBytes,
 } from "@/lib/billing-utils"
 import { $userSettings } from "@/lib/stores"
-import { cn, decimalString, formatBytes } from "@/lib/utils"
+import { cn, decimalString, formatBytes, formatDay, hourWithMinutes } from "@/lib/utils"
 import type { SystemRecord } from "@/types"
 
 /* ------------------------------------------------------------------ */
@@ -69,6 +88,59 @@ function CycleSuffix({ cycle }: { cycle: Cycle }) {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Bytes -> compact display string (`812 MB`, `1.2 TB`) in the unit the user
+ * picked in settings. Shared by the bar, its tooltip and the dialog panel.
+ */
+function useTrafficFormat() {
+	const unitNet = useStore($userSettings, { keys: ["unitNet"] }).unitNet
+	return useCallback(
+		(bytes: number) => {
+			const { value, unit } = formatBytes(bytes, false, unitNet)
+			// "812 GB" reads better than "812.0 GB"; small values keep more precision.
+			const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
+			return `${decimalString(value, digits)}${unit}`
+		},
+		[unitNet]
+	)
+}
+
+/** PB date string -> short local day (`14 Mar`). */
+function formatPbDay(value: string): string {
+	const ms = parsePbDate(value)
+	return ms ? formatDay(new Date(ms).toISOString()) : ""
+}
+
+/** PB date string -> short local date and time (`14 Mar 09:30`). */
+function formatPbDateTime(value: string): string {
+	const ms = parsePbDate(value)
+	if (!ms) return ""
+	const iso = new Date(ms).toISOString()
+	return `${formatDay(iso)} ${hourWithMinutes(iso)}`
+}
+
+/** Period range + last-sample label, shared by the tooltip and the dialog panel. */
+function trafficWindow(traffic: TrafficRecord) {
+	const start = formatPbDay(traffic.periodStart)
+	const end = formatPbDay(traffic.periodEnd)
+	return {
+		range: start && end ? `${start} – ${end}` : "",
+		lastSample: traffic.lastSampleAt ? formatPbDateTime(traffic.lastSampleAt) : "",
+	}
+}
+
+/** Progress bar color: <80 ok, 80–99 warn, >=100 crit. */
+function trafficBarClass(pct: number): string {
+	switch (getTrafficSeverity(pct)) {
+		case "crit":
+			return "bg-red-500"
+		case "warn":
+			return "bg-yellow-500"
+		default:
+			return "bg-green-500"
+	}
+}
+
+/**
  * Compact billing line shown under a system card and in the table column.
  * Renders nothing without a billing record, so both callers can mount it
  * unconditionally and let it decide (and subscribe) on its own.
@@ -76,7 +148,15 @@ function CycleSuffix({ cycle }: { cycle: Cycle }) {
  * `bordered` keeps the card's top divider; the table cell passes `false` to
  * avoid a redundant line on top of the cell separator.
  */
-export function BillingSummary({ systemId, bordered = true }: { systemId: string; bordered?: boolean }) {
+export function BillingSummary({
+	systemId,
+	paused = false,
+	bordered = true,
+}: {
+	systemId: string
+	paused?: boolean
+	bordered?: boolean
+}) {
 	const { t } = useLingui()
 	const billing = useStore($billingBySystemId)[systemId]
 	const traffic = useStore($trafficBySystemId)[systemId]
@@ -123,38 +203,192 @@ export function BillingSummary({ systemId, bordered = true }: { systemId: string
 					</>
 				)}
 			</div>
-			{traffic && billing.trafficLimit > 0 && <TrafficBar billing={billing} traffic={traffic} />}
+			{traffic && billing.trafficLimit > 0 && <TrafficBar billing={billing} traffic={traffic} paused={paused} />}
 		</div>
 	)
 }
 
-function TrafficBar({ billing, traffic }: { billing: BillingRecord; traffic: TrafficRecord }) {
+function TrafficBar({ billing, traffic, paused }: { billing: BillingRecord; traffic: TrafficRecord; paused: boolean }) {
 	const { t } = useLingui()
-	const unitNet = useStore($userSettings, { keys: ["unitNet"] }).unitNet
+	const fmt = useTrafficFormat()
 	const used = billing.trafficMode === "upload" ? traffic.usedUpload : traffic.usedUpload + traffic.usedDownload
 	const state = getTrafficState(billing.trafficLimit, used, parsePbDate(traffic.periodEnd))
-
-	const fmt = (bytes: number) => {
-		const { value, unit } = formatBytes(bytes, false, unitNet)
-		return `${decimalString(value, value >= 100 ? 1 : 2)}${unit}`
-	}
-	const usedStr = fmt(used)
-	const limitStr = fmt(billing.trafficLimit)
 	const pct = Math.round(state.pct)
-
-	const barColor = state.exceeded ? "bg-red-500" : pct >= 80 ? "bg-yellow-500" : "bg-green-500"
-	const daysLeft = state.daysLeft
+	const daysLeft = Math.max(0, state.daysLeft)
+	const { range, lastSample } = trafficWindow(traffic)
 
 	return (
-		<div className="flex flex-col gap-1">
-			<div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-				<div className={cn("h-full", barColor)} style={{ width: `${pct}%` }} />
+		<Tooltip>
+			<TooltipTrigger asChild>
+				{/* Sits above the card's full-size link so hovering/clicks reach the bar;
+				    a click jumps straight to the traffic tab. */}
+				<button
+					type="button"
+					onClick={() => openBillingDialog(billing.system, "traffic")}
+					className={cn(
+						"relative z-10 flex w-full cursor-pointer flex-col gap-1 text-left",
+						paused && "opacity-60"
+					)}
+				>
+					<span
+						role="progressbar"
+						aria-valuenow={pct}
+						aria-valuemin={0}
+						aria-valuemax={100}
+						aria-label={t`Traffic: ${fmt(used)} of ${fmt(billing.trafficLimit)} used`}
+						className="block h-1.5 w-full overflow-hidden rounded-full bg-muted"
+					>
+						<span
+							className={cn("block h-full transition-[width] duration-300", trafficBarClass(state.pct))}
+							style={{ width: `${pct}%` }}
+						/>
+					</span>
+					<span className="text-muted-foreground">
+						{t`Used ${fmt(used)} / ${fmt(billing.trafficLimit)}`}
+						{" · "}
+						{daysLeft > 0 ? t`resets in ${daysLeft} days` : t`resets today`}
+					</span>
+				</button>
+			</TooltipTrigger>
+			<TooltipContent side="top" className="max-w-xs">
+				<div className="grid gap-1 text-xs">
+					<div className="flex justify-between gap-6">
+						<span className="text-muted-foreground">{t`Upload`}</span>
+						<span className="tabular-nums">{fmt(traffic.usedUpload)}</span>
+					</div>
+					<div className="flex justify-between gap-6">
+						<span className="text-muted-foreground">{t`Download`}</span>
+						<span className="tabular-nums">{fmt(traffic.usedDownload)}</span>
+					</div>
+					{range && <div className="tabular-nums text-muted-foreground">{range}</div>}
+					{lastSample && <div className="text-muted-foreground">{t`Last sample ${lastSample}`}</div>}
+					{paused && <div className="text-yellow-500">{t`Paused — traffic is not counted`}</div>}
+				</div>
+			</TooltipContent>
+		</Tooltip>
+	)
+}
+
+/**
+ * Live ledger for the traffic tab: period, usage split, countdown and the
+ * "reset now" action. Reads the saved record (not the form), so it keeps
+ * showing the truth while the user types a new quota above it.
+ */
+function TrafficUsage({
+	billing,
+	traffic,
+	readOnly,
+}: {
+	billing?: BillingRecord
+	traffic?: TrafficRecord
+	readOnly: boolean
+}) {
+	const { t } = useLingui()
+	const fmt = useTrafficFormat()
+	const [confirmOpen, setConfirmOpen] = useState(false)
+	if (!billing || !traffic || billing.trafficLimit <= 0) return null
+
+	const used = billing.trafficMode === "upload" ? traffic.usedUpload : traffic.usedUpload + traffic.usedDownload
+	const state = getTrafficState(billing.trafficLimit, used, parsePbDate(traffic.periodEnd))
+	const pct = Math.round(state.pct)
+	const daysLeft = Math.max(0, state.daysLeft)
+	const severity = getTrafficSeverity(state.pct)
+	const { range, lastSample } = trafficWindow(traffic)
+
+	const resetNow = async () => {
+		setConfirmOpen(false)
+		try {
+			// The hub applies the reset on the next sample (<= 60s). `manualResetAt`
+			// is never cleared; the hub compares it with `lastResetAt` instead.
+			const record = await pb
+				.collection<BillingRecord>("system_billing")
+				.update(billing.id, { manualResetAt: new Date().toISOString() })
+			$billingBySystemId.set({ ...$billingBySystemId.get(), [record.system]: record })
+			toast({ description: t`Reset scheduled. It applies on the next sample, within a minute.` })
+		} catch (err: any) {
+			toast({
+				title: t`Reset failed`,
+				description: err?.data?.message || err?.message || t`Please try again.`,
+				variant: "destructive",
+			})
+		}
+	}
+
+	return (
+		<div className="grid gap-2 rounded-md border p-3 text-xs">
+			{range && (
+				<div className="text-muted-foreground">
+					<Trans>This period</Trans>: {range}
+				</div>
+			)}
+			<div className="flex items-center justify-between gap-3">
+				<span>{t`Used ${fmt(used)} / ${fmt(billing.trafficLimit)}`}</span>
+				<span
+					className={cn(
+						"tabular-nums",
+						severity === "crit" ? "text-red-500" : severity === "warn" ? "text-yellow-500" : "text-muted-foreground"
+					)}
+				>
+					{pct}%
+				</span>
 			</div>
-			<div className="text-muted-foreground">
-				{t`Used ${usedStr} / ${limitStr}`}
-				{" · "}
-				{t`resets in ${daysLeft} days`}
+			<div
+				role="progressbar"
+				aria-valuenow={pct}
+				aria-valuemin={0}
+				aria-valuemax={100}
+				aria-label={t`Traffic: ${fmt(used)} of ${fmt(billing.trafficLimit)} used`}
+				className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+			>
+				<div className={cn("h-full", trafficBarClass(state.pct))} style={{ width: `${pct}%` }} />
 			</div>
+			<div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+				<span>{t`Upload ${fmt(traffic.usedUpload)}`}</span>
+				<span>{t`Download ${fmt(traffic.usedDownload)}`}</span>
+				<span>{daysLeft > 0 ? t`resets in ${daysLeft} days` : t`resets today`}</span>
+			</div>
+			{lastSample && (
+				<div className="text-muted-foreground">
+					<Trans>Last sample</Trans>: {lastSample}
+				</div>
+			)}
+			{!readOnly && (
+				<>
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="justify-self-start"
+						onClick={() => setConfirmOpen(true)}
+					>
+						<RotateCcwIcon className="me-1.5 size-3.5" />
+						<Trans>Reset now</Trans>
+					</Button>
+					<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>
+									<Trans>Reset traffic usage now?</Trans>
+								</AlertDialogTitle>
+								<AlertDialogDescription>
+									<Trans>
+										The current period's upload and download counters go back to zero. The billing period itself is not
+										changed. The reset applies on the next sample, within a minute.
+									</Trans>
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>
+									<Trans>Cancel</Trans>
+								</AlertDialogCancel>
+								<AlertDialogAction onClick={resetNow}>
+									<Trans>Reset</Trans>
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+				</>
+			)}
 		</div>
 	)
 }
@@ -162,10 +396,6 @@ function TrafficBar({ billing, traffic }: { billing: BillingRecord; traffic: Tra
 /* ------------------------------------------------------------------ */
 /* Dialog                                                              */
 /* ------------------------------------------------------------------ */
-
-const GB = 1024 ** 3
-const TB = 1024 ** 4
-type TrafficUnit = "GB" | "TB"
 
 interface BillingForm {
 	system: string
@@ -183,11 +413,10 @@ interface BillingForm {
 	trafficAlerts: boolean
 }
 
-function pickUnit(bytes: number): TrafficUnit {
-	return bytes >= TB && bytes % TB === 0 ? "TB" : "GB"
-}
-
 function initialForm(rec?: BillingRecord): BillingForm {
+	const bytes = rec?.trafficLimit ?? 0
+	// The input shows a value in the selected unit, not raw bytes.
+	const unit = pickTrafficUnit(bytes)
 	return {
 		system: rec?.system ?? "",
 		billingType: rec?.billingType ?? "paid",
@@ -197,8 +426,8 @@ function initialForm(rec?: BillingRecord): BillingForm {
 		paidAt: rec?.paidAt ? toDateInputValue(rec.paidAt) : "",
 		expiresAt: rec?.expiresAt ? toDateInputValue(rec.expiresAt) : "",
 		notifyDaysBefore: rec?.notifyDaysBefore != null ? String(rec.notifyDaysBefore) : "7",
-		trafficLimit: rec?.trafficLimit ? String(rec.trafficLimit) : "",
-		trafficUnit: pickUnit(rec?.trafficLimit ?? 0),
+		trafficLimit: bytes > 0 ? String(trafficFromBytes(bytes, unit)) : "",
+		trafficUnit: unit,
 		trafficMode: rec?.trafficMode ?? "sum",
 		resetDay: rec?.resetDay ? String(rec.resetDay) : "1",
 		// §4.1 #4: default true; the backend hook cannot distinguish "unset" from explicit false.
@@ -206,29 +435,39 @@ function initialForm(rec?: BillingRecord): BillingForm {
 	}
 }
 
+/** Reads an input value in `unit` and converts it to bytes (0 for empty / invalid). */
 function toBytes(display: string, unit: TrafficUnit): number {
-	const n = display === "" ? 0 : Number(display)
-	return Math.round(n * (unit === "TB" ? TB : GB))
+	return trafficToBytes(display === "" ? 0 : Number(display), unit)
 }
 
 export function BillingDialog({
 	system,
 	open,
 	onOpenChange,
+	initialTab = "cost",
 }: {
 	system: SystemRecord
 	open: boolean
 	onOpenChange: (open: boolean) => void
+	/** Tab to show when the dialog opens; the card's traffic bar asks for "traffic". */
+	initialTab?: BillingTab
 }) {
 	const { t } = useLingui()
 	const readOnly = isReadOnlyUser()
 	const [form, setForm] = useState<BillingForm>(() => initialForm($billingBySystemId.get()[system.id]))
+	const [tab, setTab] = useState<BillingTab>(initialTab)
+	// Saved values (not the form) drive the live traffic ledger.
+	const savedBilling = useStore($billingBySystemId)[system.id]
+	const savedTraffic = useStore($trafficBySystemId)[system.id]
 
-	// Re-seed the form from the latest store value each time the dialog opens.
+	// Re-seed the form (and the requested tab) from the latest store value each time the dialog opens.
 	useEffect(() => {
-		if (open) setForm(initialForm($billingBySystemId.get()[system.id]))
+		if (open) {
+			setForm(initialForm($billingBySystemId.get()[system.id]))
+			setTab(initialTab)
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [open, system.id])
+	}, [open, system.id, initialTab])
 
 	const set = <K extends keyof BillingForm>(key: K, value: BillingForm[K]) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -248,12 +487,11 @@ export function BillingDialog({
 
 	const handleUnitChange = (unit: TrafficUnit) => {
 		if (unit === form.trafficUnit) return
-		// Keep the byte value stable while switching the displayed unit; trim the
-		// long float tail so the input doesn't show e.g. 0.0009765625.
+		// Keep the byte value stable while switching the displayed unit; the
+		// conversion trims the long float tail (0.0009765625 -> 0.001).
 		const bytes = toBytes(form.trafficLimit, form.trafficUnit)
-		const factor = unit === "TB" ? TB : GB
 		set("trafficUnit", unit)
-		set("trafficLimit", String(Number((bytes / factor).toFixed(6))))
+		set("trafficLimit", bytes > 0 ? String(trafficFromBytes(bytes, unit)) : "")
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -365,7 +603,7 @@ export function BillingDialog({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="grid gap-4">
-					<Tabs defaultValue="cost" className="w-full">
+					<Tabs value={tab} onValueChange={(v) => setTab(v as BillingTab)} className="w-full">
 						<TabsList className="grid w-full grid-cols-2">
 							<TabsTrigger value="cost">
 								<Trans>Cost</Trans>
@@ -569,8 +807,11 @@ export function BillingDialog({
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="GB">GB</SelectItem>
-											<SelectItem value="TB">TB</SelectItem>
+											{TRAFFIC_UNITS.map((unit) => (
+												<SelectItem key={unit} value={unit}>
+													{unit}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 								</div>
@@ -634,6 +875,9 @@ export function BillingDialog({
 									disabled={fieldDisabled}
 								/>
 							</div>
+
+							{/* live ledger of the saved config (not the unsaved form above) */}
+							<TrafficUsage billing={savedBilling} traffic={savedTraffic} readOnly={fieldDisabled} />
 						</TabsContent>
 					</Tabs>
 

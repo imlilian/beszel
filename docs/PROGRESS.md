@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-25（P8 完成时）
+> 最后更新：2026-10-25（P9 完成时）
 
 ## 1. 阶段状态
 
@@ -18,7 +18,7 @@
 | P6 计费前端 | ✅ 完成 | `dcce1b6f`→`stage-6b` | 数据层 + 纯函数 + 单测（`dcce1b6f`）；对话框 + 卡片/表格展示 + zh-CN（`stage-6b`，见 §4 偏差 20–22） |
 | P7 到期提醒 | ✅ 完成 | `stage-7` | `BillingExpiry` 告警类型 + 每日 Cron（见 §4 偏差 26–30） |
 | P8 流量后端 | ✅ 完成 | `stage-8` | `billing.Manager.AccumulateTraffic` + 周期滚动 / 手动重置；顺带修好 P5 遗留的 `ParseCounters`（见 §4 偏差 31–36） |
-| P9 流量前端 | ⬜ | — | — |
+| P9 流量前端 | ✅ 完成 | `stage-9` | 流量 Tab 实时用量 + 立即重置、卡片 `TrafficBar`（tooltip / 暂停态）、对话框改为每页单实例（见 §4 偏差 37–43） |
 | P10 可选 | ⬜ | — | 流量提醒 / 历史 / 连接数 |
 
 分支：`custom-0.21.1`（**未另建 feature 分支**，见 §4 偏差 1）
@@ -62,6 +62,10 @@ git status --short            # 应无输出
 | `billing.ResetReasonInit/Auto/Manual` | 同上 | 写进 `system_traffic.resetReason`，用于排查"为什么清零" |
 | `systems.TrafficAccumulator` / `SystemManager.SetTrafficAccumulator` | `internal/hub/systems/system_manager.go` | systems 包**不** import billing；hub 在 `NewHub` 里注入，nil 时采样路径整体跳过 |
 | `alerts.name` 枚举新增 `BillingExpiry` | 迁移 `1793010002` | 照抄 `1791926360` 的追加/回滚写法 |
+| `$billingDialogRequest` / `openBillingDialog(systemId, tab)` / `closeBillingDialog()` | `site/src/lib/billing.ts` | 对话框请求 atom。`SystemsTable` 只挂一个 `BillingDialog`，行菜单与卡片进度条都只发请求 |
+| `TRAFFIC_UNITS` / `trafficToBytes` / `trafficFromBytes` / `pickTrafficUnit` / `getTrafficSeverity` | `site/src/lib/billing-utils.ts` | 纯函数：单位换算（MB/GB/TB/PB）、选最精确单位、进度条分级（<80/80–99/≥100） |
+| `BillingSummary({systemId, paused, bordered})` | `site/src/components/systems-table/billing-dialog.tsx` | 卡片/表格共用的计费行 + `TrafficBar`；进度条点击 `openBillingDialog(system, "traffic")` |
+| `useTrafficFormat()` | 同上 | 按 `$userSettings.unitNet` 格式化字节（`812 MB` / `1.2 TB`），tooltip、面板、进度条共用 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
 ```ts
@@ -108,6 +112,14 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 34. **P8：手动重置保留周期边界，且自动滚动优先**。PRD §5.3 伪代码里手动重置会重算周期，WORKPLAN 改成了"只清量、不动边界"（否则用户按一次重置就白送一天额度）；两者同时到期时按 auto 走，因为边界本来就要换。
 35. **P8：累计失败绝不影响 `system_stats`**。在事务内 `Log.Error` 后继续，不 return err —— 监控数据是核心资产，流量账本下一分钟能自愈。
 36. **P8：`trafficLimit == 0` 的系统完全不建 `system_traffic` 记录**。省掉每分钟的读写；代价是"先不限额、后设限额"时从设置那一刻开始计（前端 `TrafficBar` 本来就只在 `trafficLimit > 0` 时渲染，语义一致）。
+
+37. **P9：对话框从「每行一个」改成「每页一个」**。P6 时 `BillingDialog` 挂在 `ActionsButton` 里（每个系统一份）。卡片进度条也要打开同一个对话框，若继续放在行内就得逐层加回调；改成 `$billingDialogRequest` atom + `SystemsTable` 单实例。代价：`onOpenChange(false)` 直接卸载，没有 Radix 的关闭动画（P6 也是这样，无回归）。
+38. **P9：修掉 P6 的一个真 bug —— 流量上限回填**。`initialForm` 之前是 `String(rec.trafficLimit)`（原始字节）配上 `pickUnit`，1 TB 会显示成 `1099511627776` 且单位是 TB。现在先用 `pickTrafficUnit` 选单位、再 `trafficFromBytes` 换算。**教训**：表单里存显示值还是存储值必须在类型上体现（`BillingForm.trafficLimit` 是字符串的显示值）。
+39. **P9：进度条颜色用 `getTrafficSeverity`**。P6 写的是 `exceeded ? red : pct >= 80 ? yellow : green`，`used === limit`（正好 100%）被判成黄色；PRD 要求 ≥100% 红。现按 `state.pct` 分级。
+40. **P9：`TrafficBar` 是 `<button>` 且必须 `relative z-10`**。系统卡片整块被一个 `absolute inset-0` 的 `<Link>` 覆盖，不加 `z-10` 收不到 hover/click；换成 button 后顺带解决了「点进度条跳详情页」，点击改为打开流量 Tab。
+41. **P9：`TRAFFIC_FIELDS` 增加 `lastSampleAt`**（tooltip 与面板要显示「上次采样」）。`lastCounters` 仍不取，它是每网卡计数器的 blob，每分钟变一次且不展示。
+42. **P9：「立即重置」只写 `manualResetAt`**，不碰 `lastResetAt` 与周期边界，与 P8 的 `resetReason` 约定一致；前端乐观更新 `$billingBySystemId`，实际清零由 300ms 节流的 traffic 订阅在 ≤60s 内刷新。
+43. **P9：`trafficLimit > 0` 就显示流量区，不看 `billingType`**。流量配额与计费类型正交（免费机器也可能有流量上限），PRD 也没有要求联动。
 
 ## 4.1 P6（计费前端）开工必读
 

@@ -1431,6 +1431,16 @@ P6（对话框框架）、P8（后端已产数据）
 
 PRD §11「流量」剩余条目。
 
+### 实际实现与差异（2026-10-25）
+
+- **对话框改成每页一个**：`ActionsButton` 不再自己持有 `BillingDialog`（P6 时每系统一份），改为 `$billingDialogRequest` atom + `SystemsTable` 渲染单实例。否则卡片进度条要打开同一个对话框就得逐层传回调。见 PROGRESS 偏差 37。
+- **`TrafficBar` 是 `<button class="relative z-10">`**：卡片被 `absolute inset-0` 的 `<Link>` 覆盖，不加 `z-10` 收不到 hover/click。点击行为 = 打开流量 Tab（PRD §5.6 的「点击进度条 → 打开流量 Tab」）。
+- **新增 `TrafficUsage` 面板**（流量 Tab 底部，读已保存记录而非表单）：周期区间、已用/上限 + 百分比、上下行拆分、剩余天数、上次采样、`Reset now` + `AlertDialog` 二次确认。`trafficLimit=0` 或无 `system_traffic` 记录时不渲染。
+- **单位扩到 MB/GB/TB/PB**（原文只写「MB/GB/TB/PB」但 P6 只实现了 GB/TB）；纯函数 `pickTrafficUnit` 选最精确单位，`trafficFromBytes` 负责显示值换算 —— 顺带修掉 P6「1 TB 回填成 1099511627776」的 bug（PROGRESS 偏差 38）。
+- **暂停系统**：进度条 `opacity-60` + tooltip 追加「Paused — traffic is not counted」。卡片本身已有的 `opacity-50` 保留。
+- **`TRAFFIC_FIELDS` 加了 `lastSampleAt`**，tooltip 与面板要显示「上次采样」（PROGRESS 偏差 41）。
+- 测试：`billing-utils.test.ts` 新增 `traffic units`（换算 / 往返 / 选单位）与 `getTrafficSeverity`（80/100 边界）共 5 组，`bun test` 80 pass。
+
 ### 提交
 
 ```

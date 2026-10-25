@@ -497,6 +497,7 @@ msgstr "To'xtata oladi"
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/quiet-hours.tsx
+#: src/components/systems-table/billing-dialog.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Cancel"
 msgstr "Bekor qilish"
@@ -983,8 +984,14 @@ msgid "Down ({downSystemsLength})"
 msgstr "Ishlamayapti ({downSystemsLength})"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Download"
 msgstr "Yuklab olish"
+
+#. placeholder {0}: fmt(traffic.usedDownload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Download {0}"
+msgstr ""
 
 #: src/components/alerts-history-columns.tsx
 msgid "Duration"
@@ -1430,6 +1437,14 @@ msgstr "Noto'g'ri elektron pochta manzili."
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "Til"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Last sample {lastSample}"
+msgstr ""
 
 #: src/components/network-monitors-table/monitor-card-grid.tsx
 msgid "Latency"
@@ -1887,6 +1902,10 @@ msgstr ""
 msgid "Paused"
 msgstr "To'xtatilgan"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Paused — traffic is not counted"
+msgstr ""
+
 #: src/components/systems-table/systems-table.tsx
 msgid "Paused ({pausedSystemsLength})"
 msgstr "To'xtatilgan ({pausedSystemsLength})"
@@ -1955,6 +1974,10 @@ msgstr "Ko'rsatmalar uchun <0>hujjatlarni</0> ko'ring."
 #: src/components/login/login.tsx
 msgid "Please sign in to your account"
 msgstr "Hisobingizga kiring"
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Please try again."
+msgstr ""
 
 #: src/components/routes/system/storage-pools-table.tsx
 msgid "Pool Health"
@@ -2089,7 +2112,19 @@ msgid "Requires"
 msgstr "Talab qiladi"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Reset day"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset failed"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset now"
 msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
@@ -2097,7 +2132,21 @@ msgid "Reset Password"
 msgstr "Parolni tiklash"
 
 #: src/components/systems-table/billing-dialog.tsx
+msgid "Reset scheduled. It applies on the next sample, within a minute."
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Reset traffic usage now?"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "resets in {daysLeft} days"
+msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "resets today"
 msgstr ""
 
 #: src/components/alerts-history-columns.tsx
@@ -2495,6 +2544,10 @@ msgstr "Test heartbeat"
 msgid "Test notification sent"
 msgstr "Test bildirishnoma yuborildi"
 
+#: src/components/systems-table/billing-dialog.tsx
+msgid "The current period's upload and download counters go back to zero. The billing period itself is not changed. The reset applies on the next sample, within a minute."
+msgstr ""
+
 #: src/components/routes/settings/heartbeat.tsx
 msgid "The overall status is <0>ok</0> when all systems are up, <1>warn</1> when alerts are triggered, and <2>error</2> when any system is down."
 msgstr "Barcha tizimlar ishlayotganida umumiy holat <0>yaxshi</0>, ogohlantirishlar ishga tushganda <1>ogohlantirish</1> va biron-bir tizim ishlamayotganida <2>xato</2>."
@@ -2506,6 +2559,10 @@ msgstr "Keyin backend'ga kiring va foydalanuvchilar jadvalidagi foydalanuvchi hi
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "This action cannot be undone. This will permanently delete all current records for {name} from the database."
 msgstr "Bu amalni bekor qilib bo'lmaydi. Bu {name} uchun barcha joriy yozuvlarni ma'lumotlar bazasidan butunlay o'chiradi."
+
+#: src/components/systems-table/billing-dialog.tsx
+msgid "This period"
+msgstr ""
 
 #: src/components/network-monitors-table/network-monitors-table.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -2595,6 +2652,13 @@ msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic mode"
+msgstr ""
+
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
+#: src/components/systems-table/billing-dialog.tsx
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Traffic: {0} of {1} used"
 msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
@@ -2761,8 +2825,14 @@ msgid "Updates"
 msgstr "Yangilanishlar"
 
 #: src/components/routes/system/network-sheet.tsx
+#: src/components/systems-table/billing-dialog.tsx
 msgid "Upload"
 msgstr "Yuklash"
+
+#. placeholder {0}: fmt(traffic.usedUpload)
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Upload {0}"
+msgstr ""
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Upload + download"
@@ -2803,9 +2873,16 @@ msgstr "O‘zi imzolagan sertifikatlar uchun foydalaning."
 msgid "Used"
 msgstr "Ishlatilgan"
 
+#. placeholder {0}: fmt(used)
+#. placeholder {1}: fmt(billing.trafficLimit)
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Used {usedStr} / {limitStr}"
+#: src/components/systems-table/billing-dialog.tsx
+msgid "Used {0} / {1}"
 msgstr ""
+
+#: src/components/systems-table/billing-dialog.tsx
+#~ msgid "Used {usedStr} / {limitStr}"
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/navbar.tsx
