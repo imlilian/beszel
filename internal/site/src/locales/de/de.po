@@ -443,6 +443,10 @@ msgstr ""
 msgid "Billing cycle"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Billing Expiration"
+msgstr ""
+
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Billing type"
 msgstr ""
@@ -2620,6 +2624,10 @@ msgstr "Löst aus, wenn der Lastdurchschnitt der letzten 5 Minuten einen Schwell
 #: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Wird ausgelöst, wenn die Integritätsprüfung eines Containers einen fehlerhaften Zustand meldet"
+
+#: src/lib/alerts.ts
+msgid "Triggers when a paid system nears its expiry date"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when an HTTPS certificate nears expiration"

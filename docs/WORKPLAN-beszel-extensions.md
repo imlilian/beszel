@@ -1146,11 +1146,11 @@ P6（能配置才有意义；严格说 P5 就够，但 P6 之后才好手测）
 - **阈值来源**：沿用 `system_billing.notifyDaysBefore`（P6 表单里的「提前 N 天」），不在警报面板重复设置。
   > 备选方案：像 `NetworkMonitorCert` 一样把天数塞进 `alerts.value`。但那会和 P6 对话框的 `notifyDaysBefore` 形成两个真相，先不采用；若以后想去掉 `notifyDaysBefore` 再切。
 
-#### 1. `internal/hub/billing/billing_reminders.go`（新建）
+#### 1. `internal/hub/billing/reminders.go`（新建，实际文件名）
 
 ```go
-// StartReminders 注册每日到期提醒任务。
-func (bm *Manager) CheckExpiryReminders() {
+// CheckExpiryReminders 每日到期提醒任务（实际签名返回 error，供 Cron 记日志）。
+func (bm *Manager) CheckExpiryReminders() error {
 	billingRecords, err := bm.app.FindAllRecords("system_billing",
 		dbx.NewExp("billingType = 'paid' AND cycle != 'permanent' AND expiresAt != ''"))
 	...
@@ -1159,7 +1159,8 @@ func (bm *Manager) CheckExpiryReminders() {
 		cfg := configFromRecord(rec)
 		daysLeft := DaysUntilExpiry(cfg.ExpiresAt, now)
 		level := ReminderLevel(daysLeft, cfg.NotifyDaysBefore)
-		if level == 0 || level >= cfg.RemindLevel {
+		// remindLevel 的 0 同时是"未提醒过"的哨兵，不能直接比大小
+		if level == LevelNone || (cfg.RemindLevel != LevelNone && level >= cfg.RemindLevel) {
 			continue
 		}
 		system, err := bm.app.FindRecordById("systems", cfg.SystemId)
@@ -1187,6 +1188,8 @@ func (bm *Manager) CheckExpiryReminders() {
 要点：
 - **先发通知再更新 `remindLevel`**，还是反过来？→ **先更新再发**更安全（避免发送成功但保存失败导致重复轰炸）；但会导致“发失败也标记已发”。个人使用选**先更新**，并在日志里记录失败。
 - 一天只跑一次，且 `level != 0 && level < remindLevel` 才发 → 天然幂等（同一天重复执行不会重发，因为 `remindLevel` 已推进）。
+- ⚠️ **`remindLevel` 的初值就是 `0`（`LevelNone`）**，所以判据必须排除 `remindLevel == 0` 的情况：单纯写 `level >= remindLevel` 会让首次运行（`7 >= 0`）直接跳过，一条都发不出去。实际实现见 `reminders.go`。
+- **没有订阅者时不推进 `remindLevel`**：否则用户后来打开开关会永远错过当前档位。
 - **不要**在循环里开事务（一次 Save 足够，个人规模）。
 - **按用户开关、按记录去重**：开关是每个 `user+system` 的 `alerts` 记录；去重状态 `remindLevel` 仍在 `system_billing`（全局）。单用户系统完全正确；多用户时"某用户后开启 BillingExpiry"可能漏掉已推进的档位 —— 个人部署可接受，记为已知限制。若要严格按用户去重，需给 `alerts` 的 `state` JSON 记录每个用户已提醒到的档位（参考 `NetworkMonitorCert` 的 `state` 用法）。
 

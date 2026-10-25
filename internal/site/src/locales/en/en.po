@@ -438,6 +438,10 @@ msgstr "Billing & Traffic"
 msgid "Billing cycle"
 msgstr "Billing cycle"
 
+#: src/lib/alerts.ts
+msgid "Billing Expiration"
+msgstr "Billing Expiration"
+
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Billing type"
 msgstr "Billing type"
@@ -2615,6 +2619,10 @@ msgstr "Triggers when 5 minute load average exceeds a threshold"
 #: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Triggers when a container's health check reports unhealthy"
+
+#: src/lib/alerts.ts
+msgid "Triggers when a paid system nears its expiry date"
+msgstr "Triggers when a paid system nears its expiry date"
 
 #: src/lib/alerts.ts
 msgid "Triggers when an HTTPS certificate nears expiration"

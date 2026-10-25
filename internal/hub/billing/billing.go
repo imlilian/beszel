@@ -2,8 +2,9 @@
 // metadata (collections `system_billing` and `system_traffic`), plus the pure
 // calendar helpers used by the expiry reminders and the period rollover.
 //
-// Nothing in this package talks to the network or sends notifications; the
-// scheduled jobs live in the hub packages that consume it.
+// The scheduled jobs live in this package too (see reminders.go). They never
+// talk to the network directly: notifications go through the alerts manager,
+// which applies the user's channels, silence rules and quiet hours.
 package billing
 
 import (
@@ -53,6 +54,9 @@ const (
 
 // Reminder levels. Smaller is more urgent, so a level already emitted blocks
 // every level >= it (see ReminderLevel).
+//
+// LevelNone is also the stored default of `remindLevel`, i.e. "no band sent
+// yet", which is a different thing from "nothing was due".
 const (
 	LevelExpired = -1 // already expired
 	LevelNone    = 0  // no reminder needed

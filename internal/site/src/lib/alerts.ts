@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro"
-import { ContainerIcon, CpuIcon, HardDriveIcon, MemoryStickIcon, NetworkIcon, ServerCrashIcon, ServerIcon, ShieldCheckIcon } from "lucide-react"
+import { ContainerIcon, CpuIcon, HardDriveIcon, MemoryStickIcon, NetworkIcon, ServerCrashIcon, ServerIcon, ShieldCheckIcon, WalletIcon } from "lucide-react"
 import type { RecordSubscription } from "pocketbase"
 import { EthernetIcon, GpuIcon } from "@/components/ui/icons"
 import { $alerts } from "@/lib/stores"
@@ -149,6 +149,15 @@ export const alertInfo: Record<string, AlertInfo> = {
     desc: () => t`Triggers when any systemd service enters the failed state`,
     triggeredDesc: () => t`One or more services are in a failed state`,
     /** Fires on first observation - the agent only polls systemd every 10 minutes */
+    noDuration: true,
+    noThreshold: true,
+  },
+  BillingExpiry: {
+    name: () => t`Billing Expiration`,
+    unit: "",
+    icon: WalletIcon,
+    desc: () => t`Triggers when a paid system nears its expiry date`,
+    /** Switch only - the "days before" threshold lives in the billing dialog */
     noDuration: true,
     noThreshold: true,
   },

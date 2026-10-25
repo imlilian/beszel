@@ -32,6 +32,7 @@ type Hub struct {
 	um     *users.UserManager
 	rm     *records.RecordManager
 	sm     *systems.SystemManager
+	bm     *billing.Manager
 	hb     *heartbeat.Heartbeat
 	hbStop chan struct{}
 	pubKey string
@@ -46,6 +47,7 @@ func NewHub(app core.App) *Hub {
 	hub.um = users.NewUserManager(hub)
 	hub.rm = records.NewRecordManager(hub)
 	hub.sm = systems.NewSystemManager(hub)
+	hub.bm = billing.NewManager(hub, hub.AlertManager, hub.MakeLink)
 	hub.hb = heartbeat.New(app, utils.GetEnv)
 	if hub.hb != nil {
 		hub.hbStop = make(chan struct{})
@@ -147,6 +149,12 @@ func (h *Hub) registerCronJobs(_ *core.ServeEvent) error {
 	h.Cron().MustAdd("delete old records", "8 * * * *", h.rm.DeleteOldRecords)
 	// create longer records every 10 minutes
 	h.Cron().MustAdd("create longer records", "*/10 * * * *", h.rm.CreateLongerRecords)
+	// remind users about paid systems nearing their expiry date, once a day
+	h.Cron().MustAdd("billing expiry reminders", "30 0 * * *", func() {
+		if err := h.bm.CheckExpiryReminders(); err != nil {
+			h.Logger().Error("Billing expiry reminders failed", "err", err)
+		}
+	})
 	return nil
 }
 

@@ -443,6 +443,10 @@ msgstr ""
 msgid "Billing cycle"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Billing Expiration"
+msgstr ""
+
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Billing type"
 msgstr ""
@@ -2620,6 +2624,10 @@ msgstr "Se activa cuando la carga media de 5 minutos supera un umbral"
 #: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "Se activa cuando la comprobación de estado de un contenedor indica que no está en buen estado"
+
+#: src/lib/alerts.ts
+msgid "Triggers when a paid system nears its expiry date"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when an HTTPS certificate nears expiration"

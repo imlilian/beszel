@@ -443,6 +443,10 @@ msgstr ""
 msgid "Billing cycle"
 msgstr ""
 
+#: src/lib/alerts.ts
+msgid "Billing Expiration"
+msgstr ""
+
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Billing type"
 msgstr ""
@@ -2620,6 +2624,10 @@ msgstr "當 5 分鐘平均負載超過閾值時觸發"
 #: src/lib/alerts.ts
 msgid "Triggers when a container's health check reports unhealthy"
 msgstr "當容器健康檢查回報不健康時觸發"
+
+#: src/lib/alerts.ts
+msgid "Triggers when a paid system nears its expiry date"
+msgstr ""
 
 #: src/lib/alerts.ts
 msgid "Triggers when an HTTPS certificate nears expiration"

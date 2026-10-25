@@ -17,5 +17,9 @@
 ## 计费 / 流量
 
 - [ ] P5（预判）— `system_traffic` 每 60s 更新一次，若同时订阅全量记录，500 台系统时前端会有明显重渲染压力。→ 若发生，改为只订阅可见分页的系统。
-- [ ] P7 — 到期提醒的开关接入现有 `alerts` 系统：新增 `BillingExpiry` 告警类型（迁移追加 `alerts.name` 枚举 + `lib/alerts.ts::alertInfo` 纯开关 + Cron 只给该 user+system 存在记录的发送）。**不要**再给 `system_billing` 加 `expiryAlerts` bool —— 站内已有按用户/按系统的 alert 开关（参考 `NetworkMonitorCert`）。阈值仍用 `system_billing.notifyDaysBefore`。
+- [x] P7 — 到期提醒的开关接入现有 `alerts` 系统：新增 `BillingExpiry` 告警类型（迁移 `1793010002` 追加 `alerts.name` 枚举 + `lib/alerts.ts::alertInfo` 纯开关 + Cron 只给该 user+system 存在记录的发送）。**不要**再给 `system_billing` 加 `expiryAlerts` bool。阈值仍用 `system_billing.notifyDaysBefore`。已完成。
+- [ ] P7 — 「警报」面板里 `BillingExpiry` 对**免费 / 永久**系统也会显示（面板按 `alertInfo` 全量渲染），打开后不会有任何通知。→ 可选：在 `AlertDialogContent` 里按 `$billingBySystemId` 过滤掉 `billingType !== "paid"` 的系统，或给它加一条 `note`。
+- [ ] P7 — 去重状态 `remindLevel` 存在 `system_billing`（全局），多用户共享一个系统时"某用户后开开关"会错过已推进的档位。→ 需要严格按用户去重时，把已提醒档位写进该 `alerts` 记录的 `state` JSON（参考 `NetworkMonitorCert`）。
+- [ ] P7 — 通知文案是英文硬编码（与 `alerts_*.go` 一致），未走 Lingui。→ 若要中文化，改 `reminders.go::expiryMessage` 一个函数即可。
+- [ ] P7 — 到期提醒没做人工验收（改 `expiresAt` 为明天 + 把 Cron 临时改成 `* * * * *` 观察）。→ 需要真实 hub 实例；自动化覆盖见 `billing_reminders_test.go`。
 - [ ] P8（预判）— `AccumulateTraffic` 在事务内做 2 次额外查询（每系统每分钟）。个人规模无感，系统数 >100 时考虑加内存缓存。

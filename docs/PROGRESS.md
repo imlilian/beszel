@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-24（P6 完成时）
+> 最后更新：2026-10-25（P7 完成时）
 
 ## 1. 阶段状态
 
@@ -16,7 +16,7 @@
 | P4 监控卡片视图 | ✅ 完成 | `f207b34f`→`d954fdd8`（5 提交） | 表格/卡片切换 + 20 色块 + 卡片墙 |
 | P5 计费数据模型 | ✅ 完成 | `b2e23cbb` | 2 个新集合 + 权限 + `hub/billing` 包 |
 | P6 计费前端 | ✅ 完成 | `dcce1b6f`→`stage-6b` | 数据层 + 纯函数 + 单测（`dcce1b6f`）；对话框 + 卡片/表格展示 + zh-CN（`stage-6b`，见 §4 偏差 20–22） |
-| P7 到期提醒 | ⬜ | — | — |
+| P7 到期提醒 | ✅ 完成 | `stage-7` | `BillingExpiry` 告警类型 + 每日 Cron（见 §4 偏差 26–30） |
 | P8 流量后端 | ⬜ | — | — |
 | P9 流量前端 | ⬜ | — | — |
 | P10 可选 | ⬜ | — | 流量提醒 / 历史 / 连接数 |
@@ -55,6 +55,10 @@ git status --short            # 应无输出
 | `billing.Load(app, systemId)` / `billing.LoadTraffic(...)` | `internal/hub/billing/billing.go` | 返回 `*Config` / `*Traffic`（无记录时 nil, nil）；P7/P8 直接用 |
 | `billing.DaysUntilExpiry` / `Period` / `ReminderLevel` / `AddCycle` | 同上 | 纯函数：整天差（抗 DST）、周期边界（resetDay 夹取）、提醒档位、到期日推算 |
 | `system_billing` / `system_traffic` | 迁移 `1793010000` / `1793010001` | 1:1 唯一索引 + 级联删除；traffic 只有 Hub 能写 |
+| `billing.BillingExpiryAlertName` | `internal/hub/billing/reminders.go` | `"BillingExpiry"`，与 `alertInfo.BillingExpiry`、迁移 `1793010002` 三处必须一致 |
+| `billing.NewManager(app, notifier, makeLink)` | 同上 | Hub 里 `hub.bm`；`Notifier` 接口只有 `SendAlert(alerts.AlertMessageData) error`，测试注入假实现 |
+| `billing.Manager.CheckExpiryReminders()` | 同上 | 每日 Cron 入口，返回 `errors.Join` 的聚合错误（Cron 里记日志，不 panic） |
+| `alerts.name` 枚举新增 `BillingExpiry` | 迁移 `1793010002` | 照抄 `1791926360` 的追加/回滚写法 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
 ```ts
@@ -88,6 +92,12 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 23. **P6 评审修正（渲染正确性）**：① 表格 `billing` 列改为直接渲染 `<BillingSummary systemId ... />`（组件级订阅），不再在 `cell` 里 `useStore` + 早返回 `null` —— 原先数据异步到达后列不会重新渲染；② 服务端 `cols` 加载时用 `{ ...cols, billing: cols.billing ?? false }` 保留"默认隐藏"，避免老用户把该列默认看可见；③ 网格视图列循环跳过 `billing`，避免与卡片底部那一处重复渲染；④ `BillingSummary` 加 `bordered` 参数，表格单元格传 `false` 去掉多余上边框。
 24. **P6 评审修正（结构与 i18n）**：新增 `getBillingExpiryState(billingType, cycle, expiresAt, now)` 统一返回 `free|permanent|none|active|expired`（对齐 WORKPLAN §P6 语义，调用方不再各自判断）；周期短标签收敛到 `CycleSuffix` 组件，删除复用的 `formatCycleShort`；`getExpiryState` 把"到期当天"判为 `active(0)`（显示"今天到期"），此前会显示"已过期 0 天"；`daysUntilExpiry` 目标日改用本地日历日，与 Go `DaysUntilExpiry` 完全一致；`TrafficRecord.lastCounters/lastSampleAt` 标为可选（`TRAFFIC_FIELDS` 故意不拉取）；`Currency/Cycle/TrafficMode` 类型只在 `billing-utils` 定义、`billing.ts` re-export。
 25. **P6 到期提醒的“开关”机制（2026-10-25 二次修订）**：之前误判为只有 `user_settings` 的通知渠道（email/webhook）在控制——那只是“**怎么收**”，“**收哪些项**”其实由站内已有的**「警报」系统**控制：系统卡片上的「警报」面板（`alerts` 集合，按 user+system 一条记录 + `lib/alerts.ts::alertInfo` 注册表）逐项开关，截图里的「证书到期」（`NetworkMonitorCert`）就是日期型提醒的先例。`system_billing` 本身没有提醒开关，`notifyDaysBefore` 只是提前天数。正确做法是新增 `BillingExpiry` 告警类型：迁移追加 `alerts.name` 枚举 + `alertInfo` 加一项纯开关 + P7 Cron 只发给打开了该开关的用户。已写入 WORKPLAN P7 与 PRD §4.5；P6 对话框不放“通知设置”提示（避免误导），只保留提前天数（`min=1`，默认 7）。**不要**再给 `system_billing` 加 `expiryAlerts` bool。
+
+26. **P7：`remindLevel` 的 `0` 是"未提醒"哨兵，不能直接比大小**。WORKPLAN 伪代码 `if level == 0 || level >= cfg.RemindLevel` 在首次运行时（`level=7, remindLevel=0`）恒为真，一条提醒都发不出去（实测 `messages=0` 才发现）。实际判据：`level == LevelNone || (cfg.RemindLevel != LevelNone && level >= cfg.RemindLevel)`。语义是"存过的档位阻挡它自己和更不紧急的档位（7 > 3 > 1 > -1）"。
+27. **P7：先落库再发送，且没有订阅者时不推进档位**。发送失败只丢一档、不会天天重发；反过来若"发送成功但保存失败"会每天重复轰炸。`recipients` 为空时直接 `return nil`、**不写** `remindLevel`，否则用户之后才打开开关会永远错过当前档位（这是多用户场景的唯一让步，单用户系统完全正确）。
+28. **P7：没有自己的 `alerts_history`，也不改 `alerts.value`**。`BillingExpiry` 是纯开关型（`noThreshold + noDuration`），阈值仍是 `system_billing.notifyDaysBefore`；`alerts_system.go::HandleSystemAlerts` 的 `default` 分支会因 `cpuStateAlertValue` 返回 `!ok` 而安全跳过未知名字，所以 `alerts` 包无需改动，也没有把 `BillingExpiry` 加进 `GetAlertsExcludingNames`。
+29. **P7：`alerts` 有 `(user, system, name)` 唯一索引**（`idx_MnhEt21L5r`）。测试里不要重复创建同名告警，否则 `Save` 直接失败；`DeleteUserAlerts` 是"关开关"的正路。
+30. **P7：Cron 时间是 UTC 00:30（`30 0 * * *`）**。PocketBase Cron 走服务器本地时区，部署时设 `TZ` 才会按期望的本地零点跑。消息文案是英文（与 `alerts_*.go` 一致），要中文化只需改 `expiryMessage` 一个函数。
 
 ## 4.1 P6（计费前端）开工必读
 
