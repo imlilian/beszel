@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-25（P10.1 完成时）
+> 最后更新：2026-10-25（收尾审阅后）
 
 ## 1. 阶段状态
 
@@ -21,7 +21,7 @@
 | P9 流量前端 | ✅ 完成 | `stage-9` | 流量 Tab 实时用量 + 立即重置、卡片 `TrafficBar`（tooltip / 暂停态）、对话框改为每页单实例（见 §4 偏差 37–43） |
 | P10.1 流量提醒 | ✅ 完成 | `stage-10a` | `TrafficQuota` 告警类型 + 每小时 Cron（见 §4 偏差 44–48） |
 | P10.2 流量历史 | ⬜ 取消 | — | 用户明确不做 |
-| P10.4 连接数 | ⬜ | — | 需新增 Agent 采集（`/proc/net/tcp{,6}`），独立可跳过 |
+| P10.4 连接数 | ⛔ 不做 | — | 2026-10-25 用户决定不做（PRD §6.5 / Q16 已标注，保留调研记录） |
 
 分支：`custom-0.21.1`（**未另建 feature 分支**，见 §4 偏差 1）
 基线提交：`e2ed147a`（release 0.21.1）
@@ -133,6 +133,12 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 46. **P10.1：清 `trafficRemindLevel` 的职责在采样器（P8）**，不在提醒任务里。`AccumulateTraffic` 的 reset 分支（init/auto/manual）顺手归零，否则"新周期第一条 80% 提醒"会被上个周期的档位压住。为此把 `Load` 拆出 `LoadRecord`：写回 config 需要记录本体。
 47. **P10.1：只用两次全表扫描**（`system_billing` 里 `trafficLimit > 0` 的记录 + 整张 `system_traffic`），在内存里按 `system` 关联。`system_traffic` 只为有配额的系统存在（P8 的懒创建），因此天然跳过无限额系统，也不需要 N+1 查询。
 48. **P10.1：文案与档位都是固定值（80 / 100）**，不做可配置阈值；`TrafficLevelExceeded = -1`、`TrafficLevelWarn = 80`，与到期提醒的 `level >= remindLevel` 判据共用同一套"更紧急更小"语义（`remindLevel` 的 0 仍是"未发送"哨兵，判据必须排除）。
+
+49. **收尾审阅：流量提醒不能读“已经结束的周期”**。`system_traffic` 只随采样滚动，Agent 离线/系统暂停/Hub 停机跨过重置日时，账本会停在旧 `periodEnd` 和高用量上；此时 `checkTraffic` 会照着过期账本发一条“本周期超量、今天重置”。已在 `reminders.go::checkTraffic` 开头加守卫：`traffic.PeriodEnd <= 0 || now >= PeriodEnd` 直接返回，让采样器先滚动。测试 `TestTrafficRemindersSkipEndedPeriods`。
+50. **版本号方案：`0.21.1+beszelx.1`（上游基线 + build metadata）**。不用 `0.22.0-beszelx.1`：pre-release 排序高于基线，会让上游下一个补丁版本看起来像降级；metadata 被 semver 优先级忽略，`MinVersion*` 判断、agent↔hub 握手、`ghupdate` 比较全部与上游 0.21.1 一致。合并上游时**只改 `+` 前面**，`beszelx.N` 每轮 fork 功能 +1。回归保护 `beszel_test.go`。PRD §9.3 已同步。
+51. **PRD §5.7「改 `resetDay` 立即重算 `periodEnd`」按实现修正**：新规则**下一个周期**生效，当前周期边界与已用量都不动。立即重算在跨月边界会把 `periodEnd` 算到过去 → 采样器判为跨周期 → 清零，正好违背同一行写的“不重置已用量”。`Period()` 只在滚动时调用，是安全的一侧。
+52. **PRD §4.3 入口 B（系统详情页计费 Badge）取消**。计费与流量的唯一入口是系统卡片右上角三点菜单 →「计费与流量」（`费用` / `流量` 两个 Tab）；详情页没有头部配置区，单独挂一个只显示一行字的徽标不值得。**P10.4（TCP/UDP 连接数）同时关闭**。
+53. **重置日志**：`AccumulateTraffic` 的 reset 分支补 `Logger().Info("Traffic counters reset", "reason", …)`（每系统每周期一次），落实 PRD §10「流量重置要记日志」；此前只有异常差值的 `Warn`。
 
 ## 4.1 P6（计费前端）开工必读
 

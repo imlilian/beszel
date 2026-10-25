@@ -83,7 +83,7 @@ P5 计费数据模型 + 后端（与 P1-P4 无依赖，可并行）
 
 ```
 - [ ] 代码编译通过（go build ./...）
-- [ ] make test 全绿
+- [ ] `go test -tags='testing no_ui' ./internal/...` 全绿（`make test` 跑的是 `./...`，Windows 上 `agent/` 有 2 个固有失败，见 FOLLOWUPS）
 - [ ] 前端 npm run build 通过（如涉及）
 - [ ] 新增文案已跑 npm run sync
 - [ ] 新增字段已加入对应的 fields 常量（前端查询白名单）
@@ -1480,7 +1480,9 @@ stage-9: add traffic config tab and card progress bar
 
 ~~per-monitor 阈值~~ —— Q6 已确认统一全局 150/400ms，不做每监控覆盖。
 
-### P10.4 TCP / UDP 连接数（可选，仅 Linux）
+### P10.4 TCP / UDP 连接数（**已决定不做**，2026-10-25）
+
+> 用户明确不做。以下保留为技术调研记录，`agent/network_conns_linux.go` 等文件均未创建。
 
 **前提核查**：Agent 目前**完全没有**采集连接数（`system.Stats` 无相关字段，`agent/network.go` 只有 `psutilNet.IOCounters`）。这是**新增采集**，不是复用。
 

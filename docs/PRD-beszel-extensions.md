@@ -81,7 +81,7 @@
 | `systems` | `name,status,host,port,info(JSON),users(relation[])` | `info` 存 `system.Info`；`users` 决定可见性 |
 | `system_stats` | `system,stats(JSON),type` | `type` ∈ `1m/10m/20m/120m/480m` |
 | `system_details` | 系统静态详情 | — |
-| `network_monitors` | `system,target,protocol,port,interval,server,skipTlsVerify,res,resAvg1h,resMin1h,resMax1h,loss1h,enabled,certInfo` | **无 `name` 字段** |
+| `network_monitors` | `system,target,protocol,port,interval,server,skipTlsVerify,res,resAvg1h,resMin1h,resMax1h,loss1h,enabled,certInfo` | 本节描述**改造前**现状；P1 已加 `name`（迁移 `1792847604`） |
 | `network_monitor_stats` | `monitor,system,type,total_count,success_count,res_sum,res_min,res_max` | 原始计数，前端算 avg/loss |
 | `alerts` | `user,system,name(select),value,min,triggered,state(隐藏JSON),pending_since` | `name` 是**固定 select 枚举**，新增枚举值需迁移 |
 | `alerts_history` | 告警历史 | — |
@@ -270,7 +270,8 @@ func (agg *monitorAggregate) addResponse(responseUs int64) {
 → 打开 `BillingDialog`（Tabs：`费用` / `流量`）
 → readonly 用户只能看，输入框 `disabled`。
 
-**入口 B（可选，阶段 6 一起做）：系统详情页头部**显示一条 `Badge`：`¥25/月 · 12 天`，点击同样打开对话框。
+~~**入口 B（可选）：系统详情页头部**显示一条 `Badge`：`¥25/月 · 12 天`。~~
+> **2026-10-25 取消**：入口 A（卡片右上角三点菜单 →「计费与流量」，内含 `费用` / `流量` 两个 Tab）已经覆盖全部配置与查看入口，系统详情页没有“头部配置区”可以挂 Badge，加一个只为显示一行字的徽标不划算。**计费与流量的唯一入口就是三点菜单。**
 
 **费用 Tab 表单**：
 
@@ -510,7 +511,7 @@ func 本周期起点(now, resetDay):
 | Agent 离线 / 系统 `down` | 不计流量（无样本）。恢复后靠累计计数器一次性补齐（机器未重启） |
 | Hub 停机 2 小时 | 恢复后一次 diff 补齐 2 小时量（精确） |
 | 机器重启 | 该网卡本次差分为「归零补偿」，损失 < 60s 的量 |
-| 用户改 `resetDay` | 立即按新规则重算 `periodEnd`；**不重置已用量**（当前周期继续，到新的 `periodEnd` 才归零）。避免用户误操作清空数据 |
+| 用户改 `resetDay` | **新规则从下一个周期生效**；当前 `periodEnd` 不变，已用量不清零。⚠️ 2026-10-25 修订：原先写的“立即按新规则重算 `periodEnd`”与同一行的“不重置已用量”在边界上矛盾 —— 例如 20 号把重置日改到 10 号，重算出的 `periodEnd` 可能已经过去，采样器会立刻判定为跨周期并清零，想保住的用量反而丢了。现实现（`Period()` 只在滚动时调用）是安全的一侧，文档以此为准 |
 | 用户改 `trafficLimit` | 立即生效，前端百分比重算 |
 | 用户改 `trafficMode` | 立即生效（`upload` 模式下已用量口径变为 `usedUpload`，历史量不重算） |
 | 新增网卡 / 换网卡 | 首次采样只建基线，不加量 |
@@ -833,7 +834,9 @@ export function useMonitorCardStats(props): Map<string, MonitorCardData>
 - 没有任何监控 → 保持现状的 “No results.”
 - 某系统刚添加监控还没数据 → 该监控块显示 `—` + 20 个 `empty`（灰）块，不显示骨架屏（避免闪烁）。
 
-### 6.5 3.5 TCP / UDP 连接数（可选，后置）
+### 6.5 3.5 TCP / UDP 连接数（**已决定不做**）
+
+> **2026-10-25 决定**：本 fork 不实现（用户明确要求）。本节保留为技术调研记录，`P10.4` 关闭。
 
 **现状核查结论**：Agent **完全没有采集连接数**。`system.Stats`（`entities/system/system.go:23-62`）里没有任何 connections 字段，`agent/network.go` 只用 `psutilNet.IOCounters(true)` 取流量计数器。
 
@@ -896,7 +899,7 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 | `system_traffic` | `systemScopedReadRule` | **全部 nil**（Hub 独占） |
 
 - `SHARE_ALL_SYSTEMS=true` 时读放宽为“任意登录用户”，写仍受 `role != "readonly"` 限制（沿用现有 `collections.go` 变量）。
-- 到期/流量通知：发给 `systems.users` 中每个用户；`SendAlert` 内部再校验一次权限与免打扰。
+- 到期/流量通知：**走 `alerts` 集合的按用户开关**（`BillingExpiry` / `TrafficQuota`），只发给在该系统上显式开启的用户；`SendAlert` 内部再校验一次权限与免打扰。（2026-10-25 修订：原写“发给 `systems.users` 中每个用户”，会让无法关闭的通知落到每个人头上）
 - readonly 用户在 `BillingDialog` 里看到只读视图（`disabled`），不显示「立即重置」。
 
 ---
@@ -905,11 +908,13 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 
 ### 9.1 迁移清单
 
-| 迁移 | 内容 |
+| 迁移（实际文件名） | 内容 |
 |---|---|
-| `1xxx_network_monitor_name.go` | `network_monitors` + `name` Text(100) |
-| `1xxx_system_billing.go` | 新建 `system_billing` 集合（含全部费用+流量字段 + 唯一索引） |
-| `1xxx_system_traffic.go` | 新建 `system_traffic` 集合（含唯一索引） |
+| `1792847604_network_monitor_name.go` | `network_monitors` + `name` Text(100) |
+| `1793010000_system_billing.go` | 新建 `system_billing` 集合（费用 + 流量字段 + `system` 唯一索引） |
+| `1793010001_system_traffic.go` | 新建 `system_traffic` 集合（`system` 唯一索引） |
+| `1793010002_billing_expiry_alert.go` | 向 `alerts.name` 枚举追加 `BillingExpiry` |
+| `1793010003_traffic_quota_alert.go` | 向 `alerts.name` 枚举追加 `TrafficQuota` |
 
 迁移写法参考 `1790273174_network_monitor_server.go`（增量加字段）与 `0_collections_snapshot_0_20_0.go`（整集合 JSON），并在 `internal/hub/collections.go::setCollectionAuthSettings` 注册权限（**必须在 `StartHub` 里被调用到**）。
 
@@ -925,8 +930,14 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 
 ### 9.3 版本号
 
-- 建议把 fork 版本推到 `0.22.0-beszelx.1`（`beszel.go::Version`），并新增 `MinVersionBandwidthDirections = 0.22.0`（虽然不强依赖，但便于前端判断是否显示 ↑↓ 而不是回退）。
+实际采用（2026-10-25）：**`Version = "0.21.1+beszelx.1"`** —— 「上游基线版本 + build metadata」。
+
+- `+` 之前必须始终等于当前基于的上游 release（合并上游时只改前半段），`beszelx.N` 是 fork 自己的功能轮次。
+- semver 的优先级**忽略 build metadata**，因此所有 `MinVersion*` 判断、agent↔hub 握手、`ghupdate` 比较的行为与上游 0.21.1 完全一致；`0.21.2` 这类上游补丁版本仍会被判定为更新（正好是“该合并了”的信号）。
+- **不要**用 pre-release 后缀（`0.22.0-beszelx.1`）：它排序高于基线，会让上游的下一个补丁版本看起来像降级。
+- 上一版建议的 `MinVersionBandwidthDirections` **不新增**：前端用「`bu`/`bd` 都为 0 ⇒ 旧 Agent」的零值探测判断是否回退合并显示，不需要版本常量。
 - `beszel.MinVersionNetworkMonitors` 不变。
+- 回归保护：`beszel_test.go::TestVersionKeepsUpstreamPrecedence` 断言版本可解析、带 `+beszelx.N`、且优先级低于下一个上游补丁版本。
 
 ---
 
@@ -937,7 +948,7 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 | 性能 | 卡片墙 50 个系统 / 200 个监控：首屏 ≤ 2 个查询 + 1 个订阅；滚动 60fps；色块渲染 < 16ms/帧 |
 | 写入放大 | 新增写：每系统每 60s 1 次 `system_traffic` 更新（约 200 字节），相对 `system_stats` 可忽略 |
 | 存储 | 无新增时序数据（流量只存运行态）；成本/流量配置每系统 1 行 |
-| i18n | 所有新文案走 Lingui（`t\`\`` + `Trans`），更新 `i18n.yml` 与 `locales/*` |
+| i18n | 界面文案走 Lingui（`t\`\`` + `Trans`）→ `npm run sync` → 补 `locales/*`（本项目无 `i18n.yml`，配置在 `package.json` 的 lingui 段）。通知正文例外，见 §4.5 |
 | 可访问性 | 进度条 `role="progressbar"` + `aria-valuenow`；颜色不作为唯一信息载体（同时显示数值） |
 | 深色模式 | 全部颜色使用语义类（`text-emerald-600 dark:text-emerald-400`），不硬编码十六进制 |
 | RTL | 布局用逻辑属性（`ms-*`/`me-*`），色条在 RTL 下反向（右边仍为最新） |
@@ -1012,7 +1023,7 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 | Q2 | 到期日手动填还是自动推算？ | **手动填为真相**，提供推算按钮 |
 | Q3 | 免打扰时段内到期提醒是否仍要送达？ | **遵守免打扰**（保持一致）；若需必达，后续给 `SendAlert` 加 `IgnoreQuietHours` |
 | Q4 | 提醒/重置的时区？ | **Hub 进程本地时区**，部署时设 `TZ` |
-| Q5 | 提醒发给谁？ | **系统所有成员**（`systems.users`） |
+| Q5 | 提醒发给谁？ | **在该系统上显式开启对应告警的用户**（`alerts` 集合，P7/P10.1 修订）。原方案“发给系统所有成员”已作废：通知默认关闭、由用户自己打开，与站内其它告警一致 |
 | Q6 | 150/400ms 阈值是全局还是按监控？ | **全局用户设置**（`user_settings.monitorWarnMs` / `monitorCritMs`，设置页 → General 可改）。**已确认：不做 per-monitor 覆盖，后续也不需要** |
 | Q7 | 900ms 是否适用所有协议？ | **是**（HTTP/TCP/ICMP/DNS 统一），通过 Agent 环境变量可调 |
 | Q8 | 流量是否要历史曲线？ | **MVP 不做**；若要做，用现有 10 分钟聚合 Cron 增量落 `traffic_daily`，作为独立阶段 |
@@ -1023,7 +1034,7 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 | Q13 | 卡片上的延迟数字用哪个口径？ | **`resAvg1h`（1 小时平均）**，不用最后一次探测，也不用色块窗口均值。理由见 §6.4.4 |
 | Q14 | 丢包在色块上怎么表达？ | **全丢/≥50% 丢包 = 整块红；0–50% 部分丢包 = 延迟主色 + 底部红边**。不做第 4 种独立颜色（会破坏绿黄红的直觉） |
 | Q15 | 卡片内超过 3 个监控怎么办？ | **折叠为 `+N more` 链接**，不做水平滑动（触控板会吞页面纵向滚动） |
-| Q16 | 是否做 TCP/UDP 连接数？ | **Agent 目前未采集**。作为 P10.4 可选项：仅 Linux 读 `/proc/net/{tcp,udp}{,6}`，非 Linux 隐藏 |
+| Q16 | 是否做 TCP/UDP 连接数？ | **不做**（2026-10-25 用户决定）。调研记录见 §6.5 |
 
 ---
 
