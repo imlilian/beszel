@@ -97,7 +97,7 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 27. **P7：先落库再发送，且没有订阅者时不推进档位**。发送失败只丢一档、不会天天重发；反过来若"发送成功但保存失败"会每天重复轰炸。`recipients` 为空时直接 `return nil`、**不写** `remindLevel`，否则用户之后才打开开关会永远错过当前档位（这是多用户场景的唯一让步，单用户系统完全正确）。
 28. **P7：没有自己的 `alerts_history`，也不改 `alerts.value`**。`BillingExpiry` 是纯开关型（`noThreshold + noDuration`），阈值仍是 `system_billing.notifyDaysBefore`；`alerts_system.go::HandleSystemAlerts` 的 `default` 分支会因 `cpuStateAlertValue` 返回 `!ok` 而安全跳过未知名字，所以 `alerts` 包无需改动，也没有把 `BillingExpiry` 加进 `GetAlertsExcludingNames`。
 29. **P7：`alerts` 有 `(user, system, name)` 唯一索引**（`idx_MnhEt21L5r`）。测试里不要重复创建同名告警，否则 `Save` 直接失败；`DeleteUserAlerts` 是"关开关"的正路。
-30. **P7：Cron 时间是 UTC 00:30（`30 0 * * *`）**。PocketBase Cron 走服务器本地时区，部署时设 `TZ` 才会按期望的本地零点跑。消息文案是英文（与 `alerts_*.go` 一致），要中文化只需改 `expiryMessage` 一个函数。
+30. **P7：Cron 时间是 UTC 00:30（`30 0 * * *`）**。PocketBase Cron 走服务器本地时区，部署时设 `TZ` 才会按期望的本地零点跑。消息文案是英文——与 `alerts_*.go` 的既有做法一致（通知正文一律在 Go 侧投递前拼装，前端 Lingui 只覆盖展示层），**不是遗漏**，别再去后端加 i18n。
 
 ## 4.1 P6（计费前端）开工必读
 

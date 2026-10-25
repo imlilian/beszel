@@ -20,6 +20,6 @@
 - [x] P7 — 到期提醒的开关接入现有 `alerts` 系统：新增 `BillingExpiry` 告警类型（迁移 `1793010002` 追加 `alerts.name` 枚举 + `lib/alerts.ts::alertInfo` 纯开关 + Cron 只给该 user+system 存在记录的发送）。**不要**再给 `system_billing` 加 `expiryAlerts` bool。阈值仍用 `system_billing.notifyDaysBefore`。已完成。
 - [ ] P7 — 「警报」面板里 `BillingExpiry` 对**免费 / 永久**系统也会显示（面板按 `alertInfo` 全量渲染），打开后不会有任何通知。→ 可选：在 `AlertDialogContent` 里按 `$billingBySystemId` 过滤掉 `billingType !== "paid"` 的系统，或给它加一条 `note`。
 - [ ] P7 — 去重状态 `remindLevel` 存在 `system_billing`（全局），多用户共享一个系统时"某用户后开开关"会错过已推进的档位。→ 需要严格按用户去重时，把已提醒档位写进该 `alerts` 记录的 `state` JSON（参考 `NetworkMonitorCert`）。
-- [ ] P7 — 通知文案是英文硬编码（与 `alerts_*.go` 一致），未走 Lingui。→ 若要中文化，改 `reminders.go::expiryMessage` 一个函数即可。
+- [x] P7 — 通知正文的语言：**确认与上游架构一致，不是缺陷，无需处理**。Beszel 的邮件/Webhook 正文一律由 Go 在投递前拼成字符串（`alerts_system.go` / `alerts_container.go` / `alerts_network_monitors.go` / `alerts_zfs.go` / `alerts_smart.go` / `alerts_systemd.go` 全是英文 `fmt.Sprintf`），经 `AlertManager.SendAlert` 交给 shoutrrr/SMTP；触发方是 Cron 或心跳入库，**整条链路没有前端参与**，Lingui 目录覆盖不到。前端负责的是展示层（`alertInfo` 的名称/单位/描述、告警历史表），那部分已经是多语言。`reminders.go::expiryMessage` 沿用同一模式。→ 若将来确实要发中文邮件，需在 Go 侧加按 `user_settings.settings.lang` 分发的消息表，并补上「切换语言时回写 `settings.lang`」（目前全仓没有任何代码写该字段，`api.ts:94` 只读不写）。
 - [ ] P7 — 到期提醒没做人工验收（改 `expiresAt` 为明天 + 把 Cron 临时改成 `* * * * *` 观察）。→ 需要真实 hub 实例；自动化覆盖见 `billing_reminders_test.go`。
 - [ ] P8（预判）— `AccumulateTraffic` 在事务内做 2 次额外查询（每系统每分钟）。个人规模无感，系统数 >100 时考虑加内存缓存。

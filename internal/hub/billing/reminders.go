@@ -157,8 +157,12 @@ func costLabel(cfg *Config) string {
 	return symbol + strconv.FormatFloat(cfg.Price, 'f', -1, 64) + cycleSuffixes[cfg.Cycle]
 }
 
-// expiryMessage builds the notification text. Alert messages are plain English
-// to match the other alert types (see alerts_network_monitors.go).
+// expiryMessage builds the notification text. Alert bodies are assembled here, in
+// the hub, and handed to SendAlert as plain strings, so they never pass through
+// the frontend i18n catalog. Every other alert type does the same (see
+// alerts_system.go, alerts_network_monitors.go), and keeping this one in English
+// is deliberate: translating it here alone would make billing reminders the only
+// localized notification in the product.
 func expiryMessage(systemName string, cfg *Config, daysLeft int, now time.Time) (title, message string) {
 	expiry := time.UnixMilli(cfg.ExpiresAt).In(now.Location()).Format(time.DateOnly)
 	subject := systemName

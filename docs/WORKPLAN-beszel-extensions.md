@@ -28,7 +28,7 @@
 2. **禁止跨阶段顺手改别的功能**。发现的问题写进 `docs/FOLLOWUPS.md`，不要在本阶段修。
 3. **禁止改 `beszel.MinVersionNetworkMonitors`**，除非阶段明确要求。
 4. **禁止把配置写进 `systems` 集合**（`systems` 是实时订阅对象，见 PRD §0 第 3 条）。
-5. **所有新增可见文案必须走 Lingui**：组件内用 `<Trans>` / `t\`\``，然后跑 `npm run sync` 更新 `locales`。
+5. **所有新增界面文案必须走 Lingui**：组件内用 `<Trans>` / `t\`\``，然后跑 `npm run sync` 更新 `locales`。（注意范围：Lingui 只管前端界面。**邮件 / Webhook 的通知正文由 Go 在投递前拼装，走 `alerts_*.go` 的既有英文模板**，不要在后端引入 i18n，原因见 P7「消息文案」。）
 6. **颜色必须用 Tailwind 语义类**（同时给 `dark:` 变体），禁止硬编码 hex。
 7. **任何写数据库的逻辑必须能重复执行**（幂等），尤其是 Cron。
 8. **不确定的数据库字段名先看 `internal/migrations/0_collections_snapshot_0_20_0.go`**，不要凭想象。
@@ -1204,22 +1204,24 @@ h.Cron().MustAdd("billing expiry reminders", "30 0 * * *", h.bm.CheckExpiryRemin
 #### 3. 消息文案
 
 ```
-标题: 系统即将到期：web-01
-正文: web-01（¥25/月）将于 2026-03-14 到期，剩余 7 天。
-      续费后可在控制台更新到期日。
-链接: http://hub:8090/system/xxxx
+System expires in 7 days: web-01
+web-01 (¥25/mo) expires on 2026-03-14 (7 days left). Update the expiry date after renewing.
+link: http://hub:8090/system/xxxx
 ```
 
-已过期时：
+到期当天与已过期时：
 
 ```
-标题: 系统已过期：web-01
-正文: web-01（¥25/月）已于 2026-03-14 到期（已过期 3 天）。
+System expires today: web-01
+web-01 (¥25/mo) expires today (2026-03-14). Update the expiry date after renewing.
+
+System expired: web-01
+web-01 (¥25/mo) expired on 2026-03-14 (3 days ago). Update the expiry date after renewing.
 ```
 
-文案**不放 i18n**（通知走 `internal/alerts` 现有做法，通知文案目前是英文/中文混？—— 按现有 `alerts_*.go` 的风格，用英文模板最一致；若要中文，统一改一个 `formatExpiryMessage` 函数便于以后 i18n）。
+**为什么是英文，以及为什么不该去 Go 里做 i18n**：Beszel 的通知正文全部在 Go 侧、投递前拼成字符串（`alerts_system.go`、`alerts_container.go`、`alerts_network_monitors.go`、`alerts_zfs.go`、`alerts_smart.go`、`alerts_systemd.go` 无一例外都是 `fmt.Sprintf` 英文模板），再经 `AlertManager.SendAlert` 交给 shoutrrr / SMTP。触发方是 Cron 或心跳入库，**整条链路里没有浏览器**，所以前端 Lingui 目录碰不到这些文案。前端负责的是展示层（`lib/alerts.ts::alertInfo` 的 name/unit/desc、告警历史表），那部分本来就走 Lingui。`reminders.go::expiryMessage` 与上游保持同一模式。
 
-> 实际检查：`alerts_network_monitors.go` 里消息是 `fmt.Sprintf("%s on %s: ...")` 英文。为一致性，**用英文模板**，但保留中文在注释里。若你更想中文，改这一个函数即可。
+真要做多语言邮件，属于**平台级改造**而不是 P7 的补丁：Go 侧加按语言分发的消息表 + 语言来源（`user_settings.settings.lang`，注意目前全仓没有代码写这个字段，`api.ts:94` 只读不写）+ 逐个迁移 6 个告警类型。已记录在 `docs/FOLLOWUPS.md`。
 
 ### 测试
 
