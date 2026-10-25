@@ -2638,8 +2638,8 @@ msgid "Traffic"
 msgstr "Traffic"
 
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Traffic alerts"
-msgstr "Traffic alerts"
+#~ msgid "Traffic alerts"
+#~ msgstr "Traffic alerts"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic limit"
@@ -2648,6 +2648,10 @@ msgstr "Traffic limit"
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic mode"
 msgstr "Traffic mode"
+
+#: src/lib/alerts.ts
+msgid "Traffic Quota"
+msgstr "Traffic Quota"
 
 #. placeholder {0}: fmt(used)
 #. placeholder {1}: fmt(billing.trafficLimit)
@@ -2735,6 +2739,10 @@ msgstr "Triggers when one hour loss exceeds a threshold"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Triggers when status switches between up and down"
+
+#: src/lib/alerts.ts
+msgid "Triggers when traffic usage passes 80% of the quota, and again when it is used up"
+msgstr "Triggers when traffic usage passes 80% of the quota, and again when it is used up"
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
@@ -2936,8 +2944,8 @@ msgid "Wants"
 msgstr "Wants"
 
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Warn when usage passes the threshold."
-msgstr "Warn when usage passes the threshold."
+#~ msgid "Warn when usage passes the threshold."
+#~ msgstr "Warn when usage passes the threshold."
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"

@@ -23,7 +23,8 @@ export interface BillingRecord extends RecordModel {
 	trafficLimit: number
 	trafficMode: TrafficMode
 	resetDay: number
-	trafficAlerts: boolean
+	/** Legacy per-system switch, superseded by the TrafficQuota alert record. */
+	trafficAlerts?: boolean
 	trafficRemindLevel: number
 	manualResetAt: string
 }
@@ -68,8 +69,10 @@ export function closeBillingDialog() {
 
 // The UI reads the cost/traffic fields; the reminder bookkeeping is cheap and
 // kept so the BillingRecord type stays honest for every fetched record.
+// `trafficAlerts` is deliberately not fetched any more: the per-user alert
+// record (name "TrafficQuota") replaced it.
 const BILLING_FIELDS =
-	"system,billingType,price,currency,cycle,paidAt,expiresAt,notifyDaysBefore,remindLevel,remindAt,trafficLimit,trafficMode,resetDay,trafficAlerts,trafficRemindLevel,manualResetAt"
+	"system,billingType,price,currency,cycle,paidAt,expiresAt,notifyDaysBefore,remindLevel,remindAt,trafficLimit,trafficMode,resetDay,trafficRemindLevel,manualResetAt"
 // `lastSampleAt` feeds the traffic tooltip ("last sample …"). `lastCounters` (a
 // per-interface blob) is the only field left out: it is large, updated every
 // minute, and never displayed.

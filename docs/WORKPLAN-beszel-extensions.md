@@ -1455,11 +1455,20 @@ stage-9: add traffic config tab and card progress bar
 
 > **v1.1 变更**：原 P10.3「per-monitor 阈值」**已取消** —— Q6 确认全局阈值，永不做每监控覆盖。
 
-### P10.1 流量阈值提醒（**优先级最高，Q11 指定放最后一段**）
+### P10.1 流量阈值提醒（已完成，见下方「实际实现与差异」）
 
-- 在 P7 的 Cron 里追加：读 `system_traffic` + `system_billing`，算 `pct`，`level = pct >= 100 ? -1 : pct >= 80 ? 80 : 0`，按 `trafficRemindLevel` 去重（规则同到期提醒：`level >= remindLevel` 则跳过）。
+- 读 `system_traffic` + `system_billing`，算 `pct`，`level = pct >= 100 ? -1 : pct >= 80 ? 80 : 0`，按 `trafficRemindLevel` 去重（规则同到期提醒：`level >= remindLevel` 则跳过）。
 - 周期滚动时（P8 的重置逻辑）把 `trafficRemindLevel` 清 0。
 - 消息：`web-01 has used 812 GB of 1 TB (81%) this period, resets in 18 days.`
+- **开关不走 `system_billing.trafficAlerts`**（原计划那版已作废）：和续费提醒一样接入 `alerts` 集合 —— 迁移 `1793010003` 给 `alerts.name` 追加 `TrafficQuota`，`alertInfo.TrafficQuota` 是纯开关，每个用户按系统自己决定。
+
+#### 实际实现与差异（2026-10-25）
+
+- **归属调整**：`CheckTrafficReminders()` 与到期提醒同一个 `billing.Manager`，独立 Cron `5 * * * *`（每小时），不是拼在每天 00:30 的那个任务里 —— 用量可能在任意时刻跨过 80%，按天检查最多迟 24 小时；档位去重让重复执行零成本。
+- **`trafficAlerts` 作废**：前端对话框里的「流量提醒」开关已删除（否则会出现两个开关，其中一个不生效）。DB 列保留（Go 仍解码、无人读），前端 `BILLING_FIELDS` 不再请求它。
+- **清档位放在采样器里**：`AccumulateTraffic` 的 reset 分支顺手把 `trafficRemindLevel` 归零，提醒任务只读不判断周期。为此把 `billing.Load` 拆出 `LoadRecord`（需要记录本体才能写回）。
+- **两次全表扫描**（`system_billing.trafficLimit > 0` + `system_traffic`）而不是每系统一次查询；`system_traffic` 只存在于有配额的系统，天然过滤无限额的系统。
+- 文案：`Traffic at 81%: web-01` / `Traffic quota exceeded: web-01`，正文 `web-01 has used 812 GB of 1 TB (81%) this period, resets in 18 days.`（英文，与其它告警一致）。
 
 ### P10.2 流量历史曲线
 

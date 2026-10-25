@@ -517,21 +517,26 @@ func 本周期起点(now, resetDay):
 | `trafficLimit` 设为 0 | 停止累计（`system_traffic` 保留旧值不清空，便于恢复） |
 | 系统删除 | `system_traffic.system` 级联删除 |
 
-### 5.8 流量阈值提醒（阶段 9，可选）
+### 5.8 流量阈值提醒（阶段 P10.1，已实现）
 
-复用第 4.5 节的**同一个 Cron**：
+> 2026-10-25 修订：开关**不再用** `system_billing.trafficAlerts`，改走第 4.5 节的同一套
+> `alerts` 机制 —— 新增 `TrafficQuota` 告警类型，每个用户按系统自己开关。
+
+与到期提醒**同一个 Manager、独立的每小时 Cron**（用量可能在任意时刻跨档）：
 
 ```
 usage = (trafficMode==upload ? usedUpload : usedUpload+usedDownload)
 pct   = usage * 100 / trafficLimit
 level = pct >= 100 ? -1 : pct >= 80 ? 80 : 0
-if level == 0 || level >= trafficRemindLevel: continue
-for user in systems.users: SendAlert(...)
+if level == 0 || (trafficRemindLevel != 0 && level >= trafficRemindLevel): continue
+for user in alerts(system == this, name == "TrafficQuota"): SendAlert(...)
 trafficRemindLevel = level
 ```
 
-- 周期滚动时把 `trafficRemindLevel` 清零。
+- 周期滚动（或手动重置）时由采样器把 `trafficRemindLevel` 清零。
 - 同一周期内 80% 提醒一次、100% 提醒一次。
+- 没有订阅者的系统不推进档位，用户之后打开开关仍能收到当前档位的提醒。
+- 文案（英文，与其它告警一致）：`web-01 has used 812 GB of 1 TB (81%) this period, resets in 18 days.`
 
 ---
 

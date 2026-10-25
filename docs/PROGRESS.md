@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-25（P9 完成时）
+> 最后更新：2026-10-25（P10.1 完成时）
 
 ## 1. 阶段状态
 
@@ -19,7 +19,9 @@
 | P7 到期提醒 | ✅ 完成 | `stage-7` | `BillingExpiry` 告警类型 + 每日 Cron（见 §4 偏差 26–30） |
 | P8 流量后端 | ✅ 完成 | `stage-8` | `billing.Manager.AccumulateTraffic` + 周期滚动 / 手动重置；顺带修好 P5 遗留的 `ParseCounters`（见 §4 偏差 31–36） |
 | P9 流量前端 | ✅ 完成 | `stage-9` | 流量 Tab 实时用量 + 立即重置、卡片 `TrafficBar`（tooltip / 暂停态）、对话框改为每页单实例（见 §4 偏差 37–43） |
-| P10 可选 | ⬜ | — | 流量提醒 / 历史 / 连接数 |
+| P10.1 流量提醒 | ✅ 完成 | `stage-10a` | `TrafficQuota` 告警类型 + 每小时 Cron（见 §4 偏差 44–48） |
+| P10.2 流量历史 | ⬜ 取消 | — | 用户明确不做 |
+| P10.4 连接数 | ⬜ | — | 需新增 Agent 采集（`/proc/net/tcp{,6}`），独立可跳过 |
 
 分支：`custom-0.21.1`（**未另建 feature 分支**，见 §4 偏差 1）
 基线提交：`e2ed147a`（release 0.21.1）
@@ -66,6 +68,11 @@ git status --short            # 应无输出
 | `TRAFFIC_UNITS` / `trafficToBytes` / `trafficFromBytes` / `pickTrafficUnit` / `getTrafficSeverity` | `site/src/lib/billing-utils.ts` | 纯函数：单位换算（MB/GB/TB/PB）、选最精确单位、进度条分级（<80/80–99/≥100） |
 | `BillingSummary({systemId, paused, bordered})` | `site/src/components/systems-table/billing-dialog.tsx` | 卡片/表格共用的计费行 + `TrafficBar`；进度条点击 `openBillingDialog(system, "traffic")` |
 | `useTrafficFormat()` | 同上 | 按 `$userSettings.unitNet` 格式化字节（`812 MB` / `1.2 TB`），tooltip、面板、进度条共用 |
+| `billing.TrafficQuotaAlertName` | `internal/hub/billing/reminders.go` | `"TrafficQuota"`，与 `alertInfo.TrafficQuota`、迁移 `1793010003` 三处必须一致 |
+| `billing.Manager.CheckTrafficReminders()` | 同上 | 每小时 Cron 入口；`trafficLimit > 0` 且有 `system_traffic` 的系统才参与 |
+| `billing.TrafficLevelWarn/Exceeded`（80 / -1） | `internal/hub/billing/billing.go` | 两档固定阈值，沿用「更紧急更小」的约定 |
+| `billing.trafficLevel` / `trafficUsed` / `formatBytes` | 同上 | 纯函数：档位判定、按 `trafficMode` 取计费用量、人类可读字节（`1.2 TB`） |
+| `billing.LoadRecord(app, systemID)` | 同上 | 返回 `*core.Record`（可能为 nil）；`Load` 现在基于它 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
 ```ts
@@ -120,6 +127,12 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 41. **P9：`TRAFFIC_FIELDS` 增加 `lastSampleAt`**（tooltip 与面板要显示「上次采样」）。`lastCounters` 仍不取，它是每网卡计数器的 blob，每分钟变一次且不展示。
 42. **P9：「立即重置」只写 `manualResetAt`**，不碰 `lastResetAt` 与周期边界，与 P8 的 `resetReason` 约定一致；前端乐观更新 `$billingBySystemId`，实际清零由 300ms 节流的 traffic 订阅在 ≤60s 内刷新。
 43. **P9：`trafficLimit > 0` 就显示流量区，不看 `billingType`**。流量配额与计费类型正交（免费机器也可能有流量上限），PRD 也没有要求联动。
+
+44. **P10.1：`system_billing.trafficAlerts` 作废，改由 `TrafficQuota` 告警记录控制**。和续费提醒同一套（迁移 `1793010003` + `alertInfo.TrafficQuota` 纯开关）。前端对话框里的开关已删除（留着会出现两个开关、其中一个不生效），`BILLING_FIELDS` 也不再请求该列。**DB 列不要删**：`system_billing` 的历史记录里可能有值，删列要写迁移且没有收益，Go 侧只解码不使用。
+45. **P10.1：流量提醒跑每小时（`5 * * * *`），到期提醒仍是每天**。用量可能在任意时刻跨过 80%，按天检查最坏迟 24 小时；`trafficRemindLevel` 去重让重复执行零成本。这也意味着 Cron 时区（`TZ`）只影响"整点"落在哪，不影响正确性。
+46. **P10.1：清 `trafficRemindLevel` 的职责在采样器（P8）**，不在提醒任务里。`AccumulateTraffic` 的 reset 分支（init/auto/manual）顺手归零，否则"新周期第一条 80% 提醒"会被上个周期的档位压住。为此把 `Load` 拆出 `LoadRecord`：写回 config 需要记录本体。
+47. **P10.1：只用两次全表扫描**（`system_billing` 里 `trafficLimit > 0` 的记录 + 整张 `system_traffic`），在内存里按 `system` 关联。`system_traffic` 只为有配额的系统存在（P8 的懒创建），因此天然跳过无限额系统，也不需要 N+1 查询。
+48. **P10.1：文案与档位都是固定值（80 / 100）**，不做可配置阈值；`TrafficLevelExceeded = -1`、`TrafficLevelWarn = 80`，与到期提醒的 `level >= remindLevel` 判据共用同一套"更紧急更小"语义（`remindLevel` 的 0 仍是"未发送"哨兵，判据必须排除）。
 
 ## 4.1 P6（计费前端）开工必读
 

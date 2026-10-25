@@ -28,3 +28,7 @@
 - [ ] P9 — 流量 Tab 的「立即重置」在**没有 `system_traffic` 记录**时整块面板不渲染（因此没有按钮）。→ 若要允许"提前建记录"，让 `AccumulateTraffic` 在 `trafficLimit > 0` 时即使无网卡也建一条空记录即可（代价：老 Agent 会有一条全 0 的记录）。
 - [ ] P9 — `TrafficUsage` 的剩余时间是整天粒度（`getTrafficState.daysLeft`），PRD §5.5 草图写的是「18 天 6 小时」。→ 需要精确到小时时，改成直接对 `periodEnd - now` 做 `ms → d/h` 拆分（注意跨夏令时）。
 - [ ] P9 — 未做人工验收（造 500MB 流量、停 Hub 2 小时、重启被监控机、跨重置日、手动重置）。→ 需要真实 hub + agent；纯函数与后端逻辑已被 `bun test` / `go test` 覆盖。
+- [ ] P10.1 — 「警报」面板里的 `TrafficQuota` 对**没设流量上限**的系统也会显示（面板按 `alertInfo` 全量渲染），打开后不会有任何通知。→ 与 `BillingExpiry` 同一个待办，可一并按 `$billingBySystemId` 过滤。
+- [ ] P10.1 — `system_billing.trafficAlerts` 列已成为死字段（前端不读不写、Go 只解码）。→ 想清理时写一个迁移删列，注意回滚会丢值；也可以永久留着，成本为零。
+- [ ] P10.1 — 流量提醒跑每小时，最坏情况下「刚过 80%」到「收到通知」相差不到 1 小时。→ 若要求更快，把 Cron 改成 `*/15 * * * *` 即可（档位去重保证不会重复发）。
+- [ ] P10.1 — 未做人工验收（把某个系统用量改到 81% / 101% 观察邮件）。→ 需要真实 hub + 通知渠道；自动化覆盖见 `traffic_reminders_test.go`。

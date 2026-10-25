@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -16,6 +17,11 @@ import (
 // reminders for one system. It matches alertInfo.BillingExpiry in the frontend
 // and the value added to the alerts.name select by migration 1793010002.
 const BillingExpiryAlertName = "BillingExpiry"
+
+// TrafficQuotaAlertName is the `alerts` name that opts one user into traffic
+// usage reminders for one system (migration 1793010003 +
+// alertInfo.TrafficQuota).
+const TrafficQuotaAlertName = "TrafficQuota"
 
 // paidWithExpiry matches the configs the reminder job cares about: a paid
 // cycle that actually ends. Free and permanent systems never expire.
@@ -76,16 +82,12 @@ func (bm *Manager) checkExpiry(record *core.Record, now time.Time) error {
 	}
 	// Users can switch the reminder off for a system, which deletes their alert
 	// record. Leave the band unspent so a later opt-in still receives it.
-	recipients, err := bm.recipients(cfg.SystemId)
+	recipients, err := bm.recipients(cfg.SystemId, BillingExpiryAlertName)
 	if err != nil || len(recipients) == 0 {
 		return err
 	}
-	system, err := bm.app.FindRecordById("systems", cfg.SystemId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// Deleted systems cascade to their billing record; be defensive anyway.
-			return nil
-		}
+	system, err := bm.systemRecord(cfg.SystemId)
+	if err != nil || system == nil {
 		return err
 	}
 	title, message := expiryMessage(system.GetString("name"), cfg, daysLeft, now)
@@ -115,9 +117,114 @@ func (bm *Manager) checkExpiry(record *core.Record, now time.Time) error {
 	return errors.Join(errs...)
 }
 
-// recipients returns the users who enabled the billing expiry alert for a system.
-func (bm *Manager) recipients(systemID string) ([]string, error) {
-	records, err := bm.app.FindAllRecords("alerts", dbx.HashExp{"system": systemID, "name": BillingExpiryAlertName})
+// CheckTrafficReminders walks the systems with a quota and notifies the users
+// who enabled the TrafficQuota alert for that system.
+//
+// Bands are 80% and "over the quota"; `trafficRemindLevel` stores the band
+// already sent and is cleared by the sampler when the period rolls over.
+func (bm *Manager) CheckTrafficReminders() error {
+	configs, err := bm.app.FindAllRecords("system_billing", dbx.NewExp("trafficLimit > 0"))
+	if err != nil {
+		return err
+	}
+	if len(configs) == 0 {
+		return nil
+	}
+	bySystem := make(map[string]*core.Record, len(configs))
+	for _, record := range configs {
+		bySystem[record.GetString("system")] = record
+	}
+	// `system_traffic` only exists for systems with a quota, so one scan of the
+	// collection beats a lookup per config (and skips unlimited systems for free).
+	trafficRecords, err := bm.app.FindAllRecords("system_traffic")
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	var errs []error
+	for _, trafficRecord := range trafficRecords {
+		systemID := trafficRecord.GetString("system")
+		cfgRecord, ok := bySystem[systemID]
+		if !ok {
+			continue
+		}
+		if err := bm.checkTraffic(cfgRecord, trafficRecord, now); err != nil {
+			errs = append(errs, fmt.Errorf("system %s: %w", systemID, err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (bm *Manager) checkTraffic(cfgRecord, trafficRecord *core.Record, now time.Time) error {
+	cfg := configFromRecord(cfgRecord)
+	if cfg.TrafficLimit <= 0 {
+		return nil
+	}
+	traffic := trafficFromRecord(trafficRecord)
+	used := trafficUsed(cfg, traffic)
+	pct := float64(used) / float64(cfg.TrafficLimit) * 100
+	level := trafficLevel(pct)
+	// Same ladder rule as the expiry job: TrafficLevelNone (0) means "nothing
+	// due" and is also the unset value, so it must not block the first band.
+	if level == LevelNone || (cfg.TrafficRemindLevel != LevelNone && level >= cfg.TrafficRemindLevel) {
+		return nil
+	}
+	recipients, err := bm.recipients(cfg.SystemId, TrafficQuotaAlertName)
+	if err != nil || len(recipients) == 0 {
+		return err
+	}
+	system, err := bm.systemRecord(cfg.SystemId)
+	if err != nil || system == nil {
+		return err
+	}
+	title, message := trafficMessage(system.GetString("name"), cfg, traffic, used, pct, now)
+
+	// Persist before delivering (see checkExpiry).
+	cfgRecord.Set("trafficRemindLevel", level)
+	if err := bm.app.SaveNoValidate(cfgRecord); err != nil {
+		return err
+	}
+	var errs []error
+	for _, userID := range recipients {
+		err := bm.notifier.SendAlert(alerts.AlertMessageData{
+			UserID:   userID,
+			SystemID: cfg.SystemId,
+			Title:    title,
+			Message:  message,
+			Link:     bm.makeLink("system", cfg.SystemId),
+			LinkText: "View " + system.GetString("name"),
+		})
+		if err != nil {
+			bm.app.Logger().Error("Failed to send traffic reminder", "system", cfg.SystemId, "user", userID, "err", err)
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// trafficLevel maps a usage percentage to the band it has reached.
+func trafficLevel(pct float64) int {
+	switch {
+	case pct >= 100:
+		return TrafficLevelExceeded
+	case pct >= 80:
+		return TrafficLevelWarn
+	default:
+		return LevelNone
+	}
+}
+
+// trafficUsed returns the billable byte count for the configured mode.
+func trafficUsed(cfg *Config, traffic *Traffic) int64 {
+	if cfg.TrafficMode == TrafficModeUpload {
+		return traffic.UsedUpload
+	}
+	return traffic.UsedUpload + traffic.UsedDownload
+}
+
+// recipients returns the users who enabled `alertName` for a system.
+func (bm *Manager) recipients(systemID, alertName string) ([]string, error) {
+	records, err := bm.app.FindAllRecords("alerts", dbx.HashExp{"system": systemID, "name": alertName})
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +235,20 @@ func (bm *Manager) recipients(systemID string) ([]string, error) {
 		}
 	}
 	return users, nil
+}
+
+// systemRecord loads the system a config belongs to, returning nil when it is
+// gone (deleting a system cascades to its billing record, so this is only a
+// safety net) instead of failing the whole scan.
+func (bm *Manager) systemRecord(systemID string) (*core.Record, error) {
+	record, err := bm.app.FindRecordById("systems", systemID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return record, nil
 }
 
 var currencySymbols = map[Currency]string{
@@ -188,4 +309,57 @@ func dayCount(days int) string {
 		return "1 day"
 	}
 	return fmt.Sprintf("%d days", days)
+}
+
+// trafficMessage builds the notification text. Same convention as
+// expiryMessage: plain English assembled here, because the delivery path has no
+// frontend and the i18n catalog never reaches it.
+//
+// Shape: "web-01 has used 812 GB of 1 TB (81%) this period, resets in 18 days."
+func trafficMessage(
+	systemName string,
+	cfg *Config,
+	traffic *Traffic,
+	used int64,
+	pct float64,
+	now time.Time,
+) (title, message string) {
+	percent := strconv.Itoa(int(math.Round(pct)))
+	usage := fmt.Sprintf("%s of %s (%s%%)", formatBytes(used), formatBytes(cfg.TrafficLimit), percent)
+	reset := ""
+	if traffic.PeriodEnd > 0 {
+		if days := DaysUntilExpiry(traffic.PeriodEnd, now); days > 0 {
+			reset = ", resets in " + dayCount(days)
+		} else {
+			reset = ", resets today"
+		}
+	}
+	if pct >= 100 {
+		return fmt.Sprintf("Traffic quota exceeded: %s", systemName),
+			fmt.Sprintf("%s has used %s this period%s. Further traffic may be billed by your provider.", systemName, usage, reset)
+	}
+	return fmt.Sprintf("Traffic at %s%%: %s", percent, systemName),
+		fmt.Sprintf("%s has used %s this period%s.", systemName, usage, reset)
+}
+
+// formatBytes renders a byte count the way the dashboard does: 1024-based, at
+// most one decimal, and no trailing ".0".
+func formatBytes(bytes int64) string {
+	if bytes <= 0 {
+		return "0 B"
+	}
+	if bytes < 1024 {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	// One division per unit step: 1024 bytes is 1 KB, 1024^2 is 1 MB, ...
+	units := [...]string{"KB", "MB", "GB", "TB", "PB", "EB"}
+	value := float64(bytes)
+	steps := 0
+	for value >= 1024 && steps < len(units) {
+		value /= 1024
+		steps++
+	}
+	// Whole numbers stay whole ("1 TB"), everything else keeps one decimal.
+	rounded := math.Round(value*10) / 10
+	return strconv.FormatFloat(rounded, 'f', -1, 64) + " " + units[steps-1]
 }

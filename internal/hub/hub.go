@@ -158,6 +158,14 @@ func (h *Hub) registerCronJobs(_ *core.ServeEvent) error {
 			h.Logger().Error("Billing expiry reminders failed", "err", err)
 		}
 	})
+	// remind users whose traffic usage crossed 80% / the quota. Hourly instead
+	// of daily because usage can cross a band at any time of day, and the
+	// per-band bookkeeping makes a repeat run free.
+	h.Cron().MustAdd("billing traffic reminders", "5 * * * *", func() {
+		if err := h.bm.CheckTrafficReminders(); err != nil {
+			h.Logger().Error("Billing traffic reminders failed", "err", err)
+		}
+	})
 	return nil
 }
 

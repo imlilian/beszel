@@ -17,7 +17,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "@/components/ui/use-toast"
@@ -410,7 +409,6 @@ interface BillingForm {
 	trafficUnit: TrafficUnit
 	trafficMode: TrafficMode
 	resetDay: string
-	trafficAlerts: boolean
 }
 
 function initialForm(rec?: BillingRecord): BillingForm {
@@ -430,8 +428,6 @@ function initialForm(rec?: BillingRecord): BillingForm {
 		trafficUnit: unit,
 		trafficMode: rec?.trafficMode ?? "sum",
 		resetDay: rec?.resetDay ? String(rec.resetDay) : "1",
-		// §4.1 #4: default true; the backend hook cannot distinguish "unset" from explicit false.
-		trafficAlerts: rec?.trafficAlerts ?? true,
 	}
 }
 
@@ -524,7 +520,6 @@ export function BillingDialog({
 			trafficLimit: toBytes(form.trafficLimit, form.trafficUnit),
 			trafficMode: form.trafficMode,
 			resetDay: form.resetDay === "" ? 1 : Number(form.resetDay),
-			trafficAlerts: form.trafficAlerts,
 		}
 		try {
 			const existing = $billingBySystemId.get()[system.id]
@@ -856,23 +851,6 @@ export function BillingDialog({
 									disabled={fieldDisabled}
 									onChange={(e) => set("resetDay", e.target.value)}
 									className="w-24"
-								/>
-							</div>
-
-							<div className="flex items-center justify-between rounded-md border p-3">
-								<div className="grid gap-1">
-									<Label htmlFor="trafficAlerts">
-										<Trans>Traffic alerts</Trans>
-									</Label>
-									<p className="text-xs text-muted-foreground">
-										<Trans>Warn when usage passes the threshold.</Trans>
-									</p>
-								</div>
-								<Switch
-									id="trafficAlerts"
-									checked={form.trafficAlerts}
-									onCheckedChange={(v) => set("trafficAlerts", v)}
-									disabled={fieldDisabled}
 								/>
 							</div>
 

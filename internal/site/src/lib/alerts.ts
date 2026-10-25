@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro"
-import { ContainerIcon, CpuIcon, HardDriveIcon, MemoryStickIcon, NetworkIcon, ServerCrashIcon, ServerIcon, ShieldCheckIcon, WalletIcon } from "lucide-react"
+import { ContainerIcon, CpuIcon, GaugeIcon, HardDriveIcon, MemoryStickIcon, NetworkIcon, ServerCrashIcon, ServerIcon, ShieldCheckIcon, WalletIcon } from "lucide-react"
 import type { RecordSubscription } from "pocketbase"
 import { EthernetIcon, GpuIcon } from "@/components/ui/icons"
 import { $alerts } from "@/lib/stores"
@@ -158,6 +158,15 @@ export const alertInfo: Record<string, AlertInfo> = {
     icon: WalletIcon,
     desc: () => t`Triggers when a paid system nears its expiry date`,
     /** Switch only - the "days before" threshold lives in the billing dialog */
+    noDuration: true,
+    noThreshold: true,
+  },
+  TrafficQuota: {
+    name: () => t`Traffic Quota`,
+    unit: "",
+    icon: GaugeIcon,
+    desc: () => t`Triggers when traffic usage passes 80% of the quota, and again when it is used up`,
+    /** Switch only - the quota and reset day live in the billing dialog */
     noDuration: true,
     noThreshold: true,
   },

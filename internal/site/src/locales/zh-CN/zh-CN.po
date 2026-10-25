@@ -2643,8 +2643,8 @@ msgid "Traffic"
 msgstr "流量"
 
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Traffic alerts"
-msgstr "流量提醒"
+#~ msgid "Traffic alerts"
+#~ msgstr "流量提醒"
 
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic limit"
@@ -2653,6 +2653,10 @@ msgstr "流量上限"
 #: src/components/systems-table/billing-dialog.tsx
 msgid "Traffic mode"
 msgstr "流量模式"
+
+#: src/lib/alerts.ts
+msgid "Traffic Quota"
+msgstr "流量配额"
 
 #. placeholder {0}: fmt(used)
 #. placeholder {1}: fmt(billing.trafficLimit)
@@ -2740,6 +2744,10 @@ msgstr "当一小时丢包率超过阈值时触发"
 #: src/lib/alerts.ts
 msgid "Triggers when status switches between up and down"
 msgstr "当状态在上线与掉线之间切换时触发"
+
+#: src/lib/alerts.ts
+msgid "Triggers when traffic usage passes 80% of the quota, and again when it is used up"
+msgstr "流量用量超过配额的 80% 时触发，用尽时再次触发"
 
 #: src/lib/alerts.ts
 msgid "Triggers when usage of any disk exceeds a threshold"
@@ -2941,8 +2949,8 @@ msgid "Wants"
 msgstr "希望"
 
 #: src/components/systems-table/billing-dialog.tsx
-msgid "Warn when usage passes the threshold."
-msgstr "用量超过阈值时提醒"
+#~ msgid "Warn when usage passes the threshold."
+#~ msgstr "用量超过阈值时提醒"
 
 #: src/components/routes/settings/general.tsx
 msgid "Warning (%)"

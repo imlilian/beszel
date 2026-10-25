@@ -63,6 +63,14 @@ const (
 	LevelNone    = 0  // no reminder needed
 )
 
+// Traffic reminder bands. Same convention as the expiry ladder: a smaller
+// number is more urgent, so a stored band blocks itself and everything after
+// it, while 0 doubles as "nothing sent yet".
+const (
+	TrafficLevelExceeded = -1 // usage is at or over the quota
+	TrafficLevelWarn     = 80 // usage crossed 80% of the quota
+)
+
 const (
 	DefaultNotifyDaysBefore = 7
 	DefaultResetDay         = 1
@@ -70,6 +78,10 @@ const (
 
 // Config is the typed view of a `system_billing` record. Timestamps are Unix
 // milliseconds, and 0 means "not set".
+//
+// TrafficAlerts is legacy: the per-system switch was replaced by the
+// TrafficQuota alert record (per user, like every other alert). Kept so old
+// records still decode; nothing reads it any more.
 type Config struct {
 	SystemId           string      `db:"system"`
 	BillingType        string      `db:"billingType"`
@@ -107,9 +119,10 @@ type Traffic struct {
 	ResetReason  string               `db:"resetReason"`
 }
 
-// Load returns the billing config for a system, or nil when the system has none
-// (which is the normal state: billing is optional).
-func Load(app core.App, systemID string) (*Config, error) {
+// LoadRecord returns the raw `system_billing` record for a system, or nil when
+// the system has none. Callers that have to write back to the config (the
+// traffic sampler resetting the reminder ladder) use this instead of Load.
+func LoadRecord(app core.App, systemID string) (*core.Record, error) {
 	record, err := app.FindFirstRecordByFilter(
 		"system_billing",
 		"system = {:system}",
@@ -119,6 +132,16 @@ func Load(app core.App, systemID string) (*Config, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
+		return nil, err
+	}
+	return record, nil
+}
+
+// Load returns the billing config for a system, or nil when the system has none
+// (which is the normal state: billing is optional).
+func Load(app core.App, systemID string) (*Config, error) {
+	record, err := LoadRecord(app, systemID)
+	if err != nil || record == nil {
 		return nil, err
 	}
 	return configFromRecord(record), nil

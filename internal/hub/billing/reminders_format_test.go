@@ -74,3 +74,54 @@ func TestExpiryMessage(t *testing.T) {
 		require.Contains(t, message, "web-01 expires on 2026-03-21")
 	})
 }
+
+func TestFormatBytes(t *testing.T) {
+	cases := map[int64]string{
+		0:                  "0 B",
+		512:                "512 B",
+		1024:               "1 KB",
+		1536:               "1.5 KB",
+		1024 * 1024:        "1 MB",
+		1024 * 1024 * 1024: "1 GB",
+		820 * (1 << 30):    "820 GB",
+		int64(1) << 40:     "1 TB",
+		1200 * (1 << 30):   "1.2 TB",
+		int64(1) << 50:     "1 PB",
+	}
+	for bytes, want := range cases {
+		require.Equal(t, want, formatBytes(bytes), "bytes=%d", bytes)
+	}
+}
+
+func TestTrafficMessage(t *testing.T) {
+	now := time.Date(2026, time.March, 14, 9, 0, 0, 0, time.UTC)
+	// 18 days from the 14th, so the countdown reads 18 in the assertions below.
+	end := time.Date(2026, time.April, 1, 0, 0, 0, 0, time.UTC)
+	traffic := &Traffic{PeriodEnd: end.UnixMilli()}
+	cfg := &Config{TrafficLimit: 1 << 40}
+
+	t.Run("80% band", func(t *testing.T) {
+		title, message := trafficMessage("web-01", cfg, traffic, 820*(1<<30), 80.07, now)
+		require.Equal(t, "Traffic at 80%: web-01", title)
+		require.Equal(t, "web-01 has used 820 GB of 1 TB (80%) this period, resets in 18 days.", message)
+	})
+
+	t.Run("over the quota", func(t *testing.T) {
+		title, message := trafficMessage("web-01", cfg, traffic, 1200*(1<<30), 117.2, now)
+		require.Equal(t, "Traffic quota exceeded: web-01", title)
+		require.Equal(t,
+			"web-01 has used 1.2 TB of 1 TB (117%) this period, resets in 18 days. Further traffic may be billed by your provider.",
+			message)
+	})
+
+	t.Run("the last day of the period", func(t *testing.T) {
+		lastDay := &Traffic{PeriodEnd: now.UnixMilli()}
+		_, message := trafficMessage("web-01", cfg, lastDay, 900*(1<<30), 87.9, now)
+		require.Equal(t, "web-01 has used 900 GB of 1 TB (88%) this period, resets today.", message)
+	})
+
+	t.Run("a period without an end still reads fine", func(t *testing.T) {
+		_, message := trafficMessage("web-01", cfg, &Traffic{}, 900*(1<<30), 87.9, now)
+		require.Equal(t, "web-01 has used 900 GB of 1 TB (88%) this period.", message)
+	})
+}

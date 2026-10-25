@@ -44,11 +44,15 @@ func (bm *Manager) AccumulateTraffic(txApp core.App, systemID string, stats *sys
 	if stats == nil || len(stats.NetworkInterfaces) == 0 {
 		return nil
 	}
-	cfg, err := Load(txApp, systemID)
+	cfgRecord, err := LoadRecord(txApp, systemID)
 	if err != nil {
 		return err
 	}
-	if cfg == nil || cfg.TrafficLimit <= 0 {
+	if cfgRecord == nil {
+		return nil
+	}
+	cfg := configFromRecord(cfgRecord)
+	if cfg.TrafficLimit <= 0 {
 		return nil
 	}
 	record, traffic, err := loadTrafficRecord(txApp, systemID)
@@ -80,6 +84,14 @@ func (bm *Manager) AccumulateTraffic(txApp core.App, systemID string, stats *sys
 		// them across the boundary would add bytes that belong to the previous
 		// period, or (after a long gap) a whole period's worth.
 		traffic.LastCounters = make(map[string][2]uint64, len(stats.NetworkInterfaces))
+		// A fresh period gets a fresh reminder ladder. Without this the 80% band
+		// of the previous period would block this period's.
+		if cfg.TrafficRemindLevel != LevelNone {
+			cfgRecord.Set("trafficRemindLevel", LevelNone)
+			if err := txApp.SaveNoValidate(cfgRecord); err != nil {
+				return err
+			}
+		}
 	}
 
 	// 2) Diff every interface against its own previous reading.
