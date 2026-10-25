@@ -33,5 +33,8 @@
 - [ ] P10.1 — 流量提醒跑每小时，最坏情况下「刚过 80%」到「收到通知」相差不到 1 小时。→ 若要求更快，把 Cron 改成 `*/15 * * * *` 即可（档位去重保证不会重复发）。
 - [ ] P10.1 — 未做人工验收（把某个系统用量改到 81% / 101% 观察邮件）。→ 需要真实 hub + 通知渠道；自动化覆盖见 `traffic_reminders_test.go`。
 - [x] P10.4 — TCP/UDP 连接数：**用户决定不做**（2026-10-25）。PRD §6.5 与 Q16 已标注，WORKPLAN 保留调研记录。
-- [ ] 版本 — **自更新按钮会覆盖 fork**：`internal/ghupdate` 拉的是上游 `henrygd/beszel` 的 release 资产，点「更新」会把 fork 二进制换成上游版本。当前版本号 `0.21.1+beszelx.1` 只保证上游 0.21.x 不被提示，上游一发布 0.21.2 就会提示。→ 若要彻底避免：把 `ghupdate.Config` 的仓库指到自己的 fork，或隐藏前端更新入口。
+- [x] 版本 — 自更新/更新检查已指向 `imlilian/beszel`（`beszel.RepoOwner/RepoName`），界面上的「新版本可用」角标已删除。上游二进制不会再被自动拉下来。
+- [ ] 版本 — **GHCR package 默认是 private**：首次发版后要到 GitHub → Packages 把 `beszel` / `beszel-agent` 等设为 public，否则「添加系统」里的 `docker pull ghcr.io/imlilian/beszel/beszel-agent` 会 401。
+- [ ] 版本 — tag 与 `beszel.go::Version` 的一致性靠人保证（CI 未校验）。→ 可在 `release.yml` 加一步：把 `v${Version}` 与 `github.ref_name` 比对，不一致直接失败。
+- [ ] 发行 — Windows（winget/scoop）与 Homebrew 安装入口已隐藏（fork 没有这些分发渠道）。→ 要恢复：给 `install-agent.ps1` 加「直接下载 release zip」分支；brew 需要单独建一个 tap。
 - [ ] 版本 — 合并上游后忘记改版本号前半段。→ 合并 checklist 第一步就是 `beszel.go::Version` 的 `+` 前部分对齐新的上游基线；`beszel_test.go` 只能保证格式，不能保证对齐。

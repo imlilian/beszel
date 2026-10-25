@@ -18,7 +18,7 @@ If you need to edit the service -- for instance, to change an environment variab
 Download the script:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/henrygd/beszel/main/supplemental/scripts/install-hub.sh -o install-hub.sh && chmod +x install-hub.sh
+curl -sL https://raw.githubusercontent.com/imlilian/beszel/main/supplemental/scripts/install-hub.sh -o install-hub.sh && chmod +x install-hub.sh
 ```
 
 #### Install
@@ -46,7 +46,7 @@ sudo /opt/beszel/beszel update && sudo systemctl restart beszel-hub
 Download the script:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/henrygd/beszel/main/supplemental/scripts/install-agent.sh -o install-agent.sh && chmod +x install-agent.sh
+curl -sL https://raw.githubusercontent.com/imlilian/beszel/main/supplemental/scripts/install-agent.sh -o install-agent.sh && chmod +x install-agent.sh
 ```
 
 #### Install

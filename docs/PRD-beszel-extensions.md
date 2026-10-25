@@ -930,14 +930,15 @@ a.systemInfo.BandwidthDown = systemStats.Bandwidth[1]
 
 ### 9.3 版本号
 
-实际采用（2026-10-25）：**`Version = "0.21.1+beszelx.1"`** —— 「上游基线版本 + build metadata」。
+实际采用（2026-10-25 最终）：**`Version = "0.21.1-beszelx.1"`** —— `<上游基线>-beszelx.<轮次>`，git tag 必须写成 `v<Version>`（即 `v0.21.1-beszelx.1`）。
 
-- `+` 之前必须始终等于当前基于的上游 release（合并上游时只改前半段），`beszelx.N` 是 fork 自己的功能轮次。
-- semver 的优先级**忽略 build metadata**，因此所有 `MinVersion*` 判断、agent↔hub 握手、`ghupdate` 比较的行为与上游 0.21.1 完全一致；`0.21.2` 这类上游补丁版本仍会被判定为更新（正好是“该合并了”的信号）。
-- **不要**用 pre-release 后缀（`0.22.0-beszelx.1`）：它排序高于基线，会让上游的下一个补丁版本看起来像降级。
-- 上一版建议的 `MinVersionBandwidthDirections` **不新增**：前端用「`bu`/`bd` 都为 0 ⇒ 旧 Agent」的零值探测判断是否回退合并显示，不需要版本常量。
+- `-beszelx` 之前必须等于当前基于的上游 release（合并上游只改这一段），`beszelx.N` 是 fork 自己的功能轮次。
+- **为什么不用 build metadata（`0.21.1+beszelx.1`）**：同一字符串要当 Git tag 用，而 Docker tag 只允许 `[A-Za-z0-9_.-]`，`+` 非法 —— 用了 `+` 的话 `docker-images.yml` 的 `type=semver` 会产出非法标签。
+- semver 上它是 `0.21.1` 的 **pre-release**（排在 0.21.1 之前）。所有 `MinVersion*` 常量都 ≤ 0.20.0，`beszel_test.go` 断言「版本必须高于全部 MinVersion」，所以握手行为不受影响。
+- 因为 tag 是 pre-release，`.goreleaser.yml` 必须显式 `prerelease: false`：否则 GitHub 把它标成 pre-release，`releases/latest` 会跳过它，而安装脚本与自更新正是查这个端点。`docker-images.yml` 同样必须显式加 `type=raw,value=latest`。
+- 上一版建议的 `MinVersionBandwidthDirections` **不新增**：前端用「`bu`/`bd` 都为 0 ⇒ 旧 Agent」的零值探测判断是否回退合并显示。
 - `beszel.MinVersionNetworkMonitors` 不变。
-- 回归保护：`beszel_test.go::TestVersionKeepsUpstreamPrecedence` 断言版本可解析、带 `+beszelx.N`、且优先级低于下一个上游补丁版本。
+- 回归保护：`beszel_test.go::TestVersionIdentifiesTheFork`（格式、无 `+`、基线 0.21.1、高于全部 MinVersion）。
 
 ---
 

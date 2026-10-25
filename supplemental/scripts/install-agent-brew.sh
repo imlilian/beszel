@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# NOT published by this fork: there is no `imlilian/beszel` Homebrew tap, and
+# `brew tap henrygd/beszel` below would install the upstream agent (without the
+# fork's 900ms-loss normalisation and other changes). The UI hides the Homebrew
+# command for that reason. Kept so the file stays mergeable with upstream; wire
+# it to a real tap before re-enabling the entry.
 
 PORT=45876
 KEY=""

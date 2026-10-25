@@ -1,3 +1,9 @@
+#
+# NOT published by this fork: this script installs through winget
+# (`henrygd.beszel-agent`) or the upstream scoop bucket, neither of which
+# carries the fork's agent. Adding a direct "download the release zip" path is
+# the prerequisite for re-enabling the Windows command in the UI.
+#
 param (
     [switch]$Elevated,
     [Parameter(Mandatory=$true)]

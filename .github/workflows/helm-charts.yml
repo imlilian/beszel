@@ -51,7 +51,11 @@ jobs:
   validate-and-publish:
     name: ${{ github.event_name == 'push' && 'Publish' || 'Validate' }} ${{ matrix.chart.name }}
     needs: changes
-    if: needs.changes.outputs.charts != '[]'
+    # The charts are published to ghcr.io/henrygd/beszel-charts. A fork has no
+    # write access there and no chart namespace of its own, so skip rather than
+    # fail the run. To publish your own, set OCI_REGISTRY to
+    # ghcr.io/${{ github.repository }}-charts and drop this condition.
+    if: needs.changes.outputs.charts != '[]' && github.repository_owner == 'henrygd'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

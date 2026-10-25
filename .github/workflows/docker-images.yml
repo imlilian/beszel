@@ -18,6 +18,7 @@ jobs:
             dockerfile: ./internal/dockerfile_hub
             tags: |
               type=raw,value=edge
+              type=raw,value=latest
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
               type=semver,pattern={{major}}
@@ -28,6 +29,7 @@ jobs:
             dockerfile: ./internal/dockerfile_agent
             tags: |
               type=raw,value=edge
+              type=raw,value=latest
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
               type=semver,pattern={{major}}
@@ -49,6 +51,7 @@ jobs:
             platforms: linux/amd64,linux/arm64
             tags: |
               type=raw,value=edge
+              type=raw,value=latest
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
               type=semver,pattern={{major}}
@@ -71,6 +74,7 @@ jobs:
             platforms: linux/amd64
             tags: |
               type=raw,value=edge
+              type=raw,value=latest
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
               type=semver,pattern={{major}}

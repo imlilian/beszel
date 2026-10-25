@@ -404,7 +404,7 @@ validate_platform() {
     FreeBSD)
       command -v service >/dev/null && command -v sysrc >/dev/null || fail "FreeBSD service and sysrc commands are required."
       ;;
-    Darwin) fail "For macOS, use the Homebrew installer: https://github.com/henrygd/beszel/blob/main/supplemental/scripts/install-agent-brew.sh" ;;
+    Darwin) fail "This fork does not publish a macOS package. See https://github.com/imlilian/beszel for manual options." ;;
     *) fail "Unsupported operating system: $(uname -s)" ;;
   esac
 }
@@ -507,6 +507,9 @@ prompt_auto_update() {
 # Default values
 PORT=45876
 UNINSTALL=false
+# This fork publishes its own releases. Keep this in sync with `RepoOwner` /
+# `RepoName` in beszel.go and with FORK_REPO in install-dropdowns.tsx.
+BESZEL_REPO="imlilian/beszel"
 GITHUB_URL="https://github.com"
 GITHUB_PROXY_URL=""
 KEY=""
@@ -536,7 +539,7 @@ case "${1-}" in
   printf "  --auto-update [VALUE] : Control automatic daily updates\n"
   printf "                          VALUE can be true (enable) or false (disable). If not specified, will prompt.\n"
   printf "  --mirror [URL]        : Use GitHub proxy to resolve network timeout issues in mainland China\n"
-  printf "                          URL: optional custom proxy URL (default: https://gh.beszel.dev)\n"
+  printf "                          URL: proxy URL (required, e.g. https://gh-proxy.com/)\n"
   printf "  -h, --help            : Display this help message\n"
   exit 0
   ;;
@@ -615,8 +618,7 @@ while [ $# -gt 0 ]; do
         GITHUB_PROXY_URL="$CUSTOM_PROXY"
         GITHUB_URL="$(ensure_trailing_slash "$CUSTOM_PROXY")https://github.com"
       else
-        GITHUB_PROXY_URL="https://gh.beszel.dev"
-        GITHUB_URL="$GITHUB_PROXY_URL"
+        fail "This build has no default mirror. Pass --mirror=<proxy-url> instead."
       fi
     elif [ "${2-}" != "" ] && ! echo "$2" | grep -q '^-'; then
       # use custom proxy URL provided as next argument
@@ -624,9 +626,9 @@ while [ $# -gt 0 ]; do
       GITHUB_URL="$(ensure_trailing_slash "$2")https://github.com"
       shift
     else
-      # No value specified, use default
-      GITHUB_PROXY_URL="https://gh.beszel.dev"
-      GITHUB_URL="$GITHUB_PROXY_URL"
+      # No value specified. Upstream falls back to its own mirror, which only
+      # carries upstream releases, so a bare --mirror is not usable here.
+      fail "This build has no default mirror. Pass --mirror=<proxy-url> instead."
     fi
     ;;
   --auto-update*)
@@ -929,13 +931,10 @@ fi
 
 # Determine version to install
 if [ "$VERSION" = "latest" ]; then
-  INSTALL_VERSION=$(curl -fsS --connect-timeout 10 --max-time 30 "https://get.beszel.dev/latest-version") || INSTALL_VERSION=""
-  if [ -z "$INSTALL_VERSION" ]; then
-    # Fallback to GitHub API
-    API_RELEASE_URL="https://api.github.com/repos/henrygd/beszel/releases/latest"
-    RELEASE_JSON=$(curl -fsS --connect-timeout 10 --max-time 30 "$API_RELEASE_URL") || fail "Could not fetch the latest release from GitHub."
-    INSTALL_VERSION=$(printf '%s\n' "$RELEASE_JSON" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4 | tr -d 'v')
-  fi
+  # This fork has no version CDN: ask its own repository directly.
+  API_RELEASE_URL="https://api.github.com/repos/${BESZEL_REPO}/releases/latest"
+  RELEASE_JSON=$(curl -fsS --connect-timeout 10 --max-time 30 "$API_RELEASE_URL") || fail "Could not fetch the latest release from GitHub."
+  INSTALL_VERSION=$(printf '%s\n' "$RELEASE_JSON" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4 | tr -d 'v')
   if [ -z "$INSTALL_VERSION" ]; then
     echo "Failed to get latest version"
     exit 1
@@ -951,7 +950,7 @@ echo "Downloading beszel-agent v${INSTALL_VERSION}..."
 # Download checksums file
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR" || exit 1
-curl -fsSL --connect-timeout 10 --max-time 60 "$GITHUB_URL/henrygd/beszel/releases/download/v${INSTALL_VERSION}/beszel_${INSTALL_VERSION}_checksums.txt" -o checksums.txt || fail "Could not download checksums. Try --mirror if GitHub is unreachable."
+curl -fsSL --connect-timeout 10 --max-time 60 "$GITHUB_URL/${BESZEL_REPO}/releases/download/v${INSTALL_VERSION}/beszel_${INSTALL_VERSION}_checksums.txt" -o checksums.txt || fail "Could not download checksums. Try --mirror if GitHub is unreachable."
 CHECKSUM=$(awk -v name="$FILE_NAME" '$2 == name { print $1 }' checksums.txt)
 if [ -z "$CHECKSUM" ] || ! echo "$CHECKSUM" | grep -qE "^[a-fA-F0-9]{64}$"; then
   echo "Failed to get checksum or invalid checksum format"
@@ -960,8 +959,8 @@ if [ -z "$CHECKSUM" ] || ! echo "$CHECKSUM" | grep -qE "^[a-fA-F0-9]{64}$"; then
   exit 1
 fi
 
-if ! curl -fL# --retry 3 --retry-delay 2 --connect-timeout 10 "$GITHUB_URL/henrygd/beszel/releases/download/v${INSTALL_VERSION}/$FILE_NAME" -o "$FILE_NAME"; then
-  echo "Failed to download the agent from $GITHUB_URL/henrygd/beszel/releases/download/v${INSTALL_VERSION}/$FILE_NAME"
+if ! curl -fL# --retry 3 --retry-delay 2 --connect-timeout 10 "$GITHUB_URL/${BESZEL_REPO}/releases/download/v${INSTALL_VERSION}/$FILE_NAME" -o "$FILE_NAME"; then
+  echo "Failed to download the agent from $GITHUB_URL/${BESZEL_REPO}/releases/download/v${INSTALL_VERSION}/$FILE_NAME"
   echo "Try again with --mirror (or --mirror <url>) if GitHub is not reachable."
   rm -rf "$TEMP_DIR"
   exit 1

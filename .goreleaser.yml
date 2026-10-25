@@ -271,7 +271,16 @@ winget:
       #     branch: master
 
 release:
-  draft: true
+  # Published immediately (upstream keeps it as a draft to write notes first).
+  # A draft's assets are not publicly downloadable, which would break the
+  # install scripts, which resolve `releases/latest`.
+  draft: false
+  # Forced to false for the same reason: the fork's version is a semver
+  # pre-release (`0.21.1-beszelx.1`), and the default `auto` mirrors that into
+  # GitHub's pre-release flag. GitHub then leaves the release out of
+  # `releases/latest`, which is exactly the endpoint the install scripts and
+  # the self-updater resolve.
+  prerelease: false
 
 changelog:
   disable: true

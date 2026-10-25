@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# This fork publishes its own releases. Keep this in sync with `RepoOwner` /
+# `RepoName` in beszel.go.
+BESZEL_REPO="imlilian/beszel"
+
 is_freebsd() {
   [ "$(uname -s)" = "FreeBSD" ]
 }
@@ -173,7 +177,7 @@ while [ $# -gt 0 ]; do
       printf "Options: \n"
       printf "  -u           : Uninstall the Beszel Hub\n"
       printf "  -p <port>    : Specify a port number (default: 8090)\n"
-      printf "  -c, --mirror [URL] : Use a GitHub mirror/proxy URL (default: https://gh.beszel.dev)\n"
+      printf "  -c, --mirror [URL] : Use a GitHub proxy URL (required, e.g. https://gh-proxy.com/)\n"
       printf "  --auto-update : Enable automatic daily updates (disabled by default)\n"
       printf "  -h, --help   : Display this help message\n"
       exit 0
@@ -189,7 +193,9 @@ while [ $# -gt 0 ]; do
         GITHUB_URL="$(ensure_trailing_slash "$1")https://github.com"
         shift
       else
-        GITHUB_URL="https://gh.beszel.dev"
+        # Upstream's default mirror only carries upstream releases.
+        echo "This build has no default mirror. Pass --mirror <proxy-url> instead." >&2
+        exit 1
       fi
       ;;
     --auto-update)
@@ -326,7 +332,7 @@ FILE_NAME="beszel_${OS}_${ARCH}.tar.gz"
 
 TEMP_DIR=$(mktemp -d)
 ARCHIVE_PATH="$TEMP_DIR/$FILE_NAME"
-DOWNLOAD_URL="$GITHUB_URL/henrygd/beszel/releases/latest/download/$FILE_NAME"
+DOWNLOAD_URL="$GITHUB_URL/${BESZEL_REPO}/releases/latest/download/$FILE_NAME"
 
 if ! curl -fL# --retry 3 --retry-delay 2 --connect-timeout 10 "$DOWNLOAD_URL" -o "$ARCHIVE_PATH"; then
   echo "Failed to download the Beszel Hub from:"

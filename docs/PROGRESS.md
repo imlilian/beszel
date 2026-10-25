@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-25（收尾审阅后）
+> 最后更新：2026-10-25（fork 发行适配后）
 
 ## 1. 阶段状态
 
@@ -135,10 +135,23 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 48. **P10.1：文案与档位都是固定值（80 / 100）**，不做可配置阈值；`TrafficLevelExceeded = -1`、`TrafficLevelWarn = 80`，与到期提醒的 `level >= remindLevel` 判据共用同一套"更紧急更小"语义（`remindLevel` 的 0 仍是"未发送"哨兵，判据必须排除）。
 
 49. **收尾审阅：流量提醒不能读“已经结束的周期”**。`system_traffic` 只随采样滚动，Agent 离线/系统暂停/Hub 停机跨过重置日时，账本会停在旧 `periodEnd` 和高用量上；此时 `checkTraffic` 会照着过期账本发一条“本周期超量、今天重置”。已在 `reminders.go::checkTraffic` 开头加守卫：`traffic.PeriodEnd <= 0 || now >= PeriodEnd` 直接返回，让采样器先滚动。测试 `TestTrafficRemindersSkipEndedPeriods`。
-50. **版本号方案：`0.21.1+beszelx.1`（上游基线 + build metadata）**。不用 `0.22.0-beszelx.1`：pre-release 排序高于基线，会让上游下一个补丁版本看起来像降级；metadata 被 semver 优先级忽略，`MinVersion*` 判断、agent↔hub 握手、`ghupdate` 比较全部与上游 0.21.1 一致。合并上游时**只改 `+` 前面**，`beszelx.N` 每轮 fork 功能 +1。回归保护 `beszel_test.go`。PRD §9.3 已同步。
+50. **版本号最终定为 `0.21.1-beszelx.1`**（早先写的 build metadata 方案作废）。同一字符串要当 git tag 用，而 Docker tag 不允许 `+`，所以改用 semver pre-release 形式；`beszel_test.go` 断言格式、不含 `+`、基线为 0.21.1、且高于全部 `MinVersion*`。合并上游时只改 `-beszelx` 前面那段，`beszelx.N` 每轮 fork 功能 +1。
 51. **PRD §5.7「改 `resetDay` 立即重算 `periodEnd`」按实现修正**：新规则**下一个周期**生效，当前周期边界与已用量都不动。立即重算在跨月边界会把 `periodEnd` 算到过去 → 采样器判为跨周期 → 清零，正好违背同一行写的“不重置已用量”。`Period()` 只在滚动时调用，是安全的一侧。
 52. **PRD §4.3 入口 B（系统详情页计费 Badge）取消**。计费与流量的唯一入口是系统卡片右上角三点菜单 →「计费与流量」（`费用` / `流量` 两个 Tab）；详情页没有头部配置区，单独挂一个只显示一行字的徽标不值得。**P10.4（TCP/UDP 连接数）同时关闭**。
 53. **重置日志**：`AccumulateTraffic` 的 reset 分支补 `Logger().Info("Traffic counters reset", "reason", …)`（每系统每周期一次），落实 PRD §10「流量重置要记日志」；此前只有异常差值的 `Warn`。
+
+54. **fork 身份集中到 `beszel.RepoOwner/RepoName`**（`imlilian/beszel`）。`hub/update.go`（`beszel update` 自更新）与 `hub/api.go`（更新检查，新增 `ghupdate.LatestReleaseURL(owner, repo)`）都指向它，永远不会拉上游二进制。**界面上的「新版本可用」角标已删除**（`footer-repo-link.tsx`，文件头注释写明原因）：fork 版本带 `-beszelx.N`，自动升级提示只会误导。页脚 GitHub / Release 链接也改为指向 fork。
+55. **安装命令与脚本全部指向 fork**。`install-dropdowns.tsx` 顶部集中 `FORK_REPO` / `AGENT_IMAGE`（`ghcr.io/imlilian/beszel/beszel-agent`，与 `docker-images.yml` 的 `ghcr.io/${{ github.repository }}/<image>` 一致）/ `AGENT_SCRIPT_URL`（raw.githubusercontent 的 `main` 分支）。`install-agent.sh`、`install-hub.sh` 顶部加 `BESZEL_REPO` 变量并替换所有下载 URL；**删掉 `get.beszel.dev/latest-version`**，版本改由 `api.github.com/repos/$BESZEL_REPO/releases/latest` 解析；`--mirror` 不再有默认值（上游 `gh.beszel.dev` 只镜像上游资产），必须传 `--mirror=<url>`。
+56. **Windows 与 Homebrew 入口隐藏**（`add-system.tsx`、`tokens-fingerprints.tsx`）：fork 不发布 winget/scoop/brew 包，原命令装到的是上游 agent。`install-agent.ps1`、`install-agent-brew.sh` 保留（便于合并上游），文件头已注明"本 fork 未发布"。将来要恢复：给 ps1 加"直接下载 release zip"分支 / 建一个 brew tap。
+57. **发版配置修正（`-beszelx.N` 是 pre-release 引发的连锁反应）**：`.goreleaser.yml` 改 `draft: false`（草稿资产下载需登录，安装脚本会 404）+ **`prerelease: false`**（否则 `releases/latest` 直接跳过该版本）；`docker-images.yml` 显式加 `type=raw,value=latest`（pre-release tag 不会自动产出 `latest`，而 UI 命令拉的是无 tag 镜像）；`helm-charts.yml` 在 fork 上跳过（`ghcr.io/henrygd/beszel-charts` 无写权限）。
+
+## 发版流程（fork）
+
+1. `beszel.go::Version` 与 tag 必须完全一致：`Version = "0.21.1-beszelx.1"` → `git tag v0.21.1-beszelx.1`。
+2. `git push origin v0.21.1-beszelx.1` → `release.yml` 产出 tar.gz / zip / deb / checksums 并**直接发布**；`docker-images.yml` 推 `ghcr.io/imlilian/beszel/{beszel,beszel-agent,…}`（含 `latest`）。
+3. 首次发版后把 GHCR package 设为 **public**，否则 UI 里的 `docker pull` 会 401。
+4. 验证三件事：`api.github.com/repos/imlilian/beszel/releases/latest` 返回该 tag；`raw.githubusercontent.com/imlilian/beszel/main/supplemental/scripts/install-agent.sh` 可访问；`docker pull ghcr.io/imlilian/beszel/beszel-agent` 成功。
+5. 下一轮 fork 功能：`beszelx.N` +1；合并上游后把 `-beszelx` 前面换成新的上游版本（`beszel_test.go` 会拦住忘记改的情况）。
 
 ## 4.1 P6（计费前端）开工必读
 
