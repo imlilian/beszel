@@ -24,13 +24,12 @@ import {
 	copyDockerCompose,
 	copyDockerRun,
 	copyLinuxCommand,
-	copyWindowsCommand,
 	type DropdownItem,
 	InstallDropdown,
 } from "./install-dropdowns"
 import { $router, basePath, Link, navigate } from "./router"
 import { DropdownMenu, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { AppleIcon, DockerIcon, FreeBsdIcon, TuxIcon, WindowsIcon } from "./ui/icons"
+import { DockerIcon, FreeBsdIcon, TuxIcon } from "./ui/icons"
 import { InputCopy } from "./ui/input-copy"
 
 // To avoid a refactor of the dialog, we will just keep this function as a "skeleton" for the actual dialog
@@ -250,19 +249,10 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 									onClick={async () =>
 										copyLinuxCommand(isUnixSocket ? hostValue : port.current?.value, publicKey, token)
 									}
+									// Homebrew and Windows are intentionally absent: this fork publishes
+									// neither a brew tap nor winget/scoop packages, and pointing them at
+									// upstream would install an agent without this fork's changes.
 									dropdownItems={[
-										{
-											text: t({ message: "Homebrew command", context: "Button to copy install command" }),
-											onClick: async () =>
-												copyLinuxCommand(isUnixSocket ? hostValue : port.current?.value, publicKey, token, true),
-											icons: [AppleIcon, TuxIcon],
-										},
-										{
-											text: t({ message: "Windows command", context: "Button to copy install command" }),
-											onClick: async () =>
-												copyWindowsCommand(isUnixSocket ? hostValue : port.current?.value, publicKey, token),
-											icons: [WindowsIcon],
-										},
 										{
 											text: t({ message: "FreeBSD command", context: "Button to copy install command" }),
 											onClick: async () =>
@@ -271,7 +261,7 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 										},
 										{
 											text: t`Manual setup instructions`,
-											url: "https://beszel.dev/guide/agent-installation#binary",
+											url: "https://github.com/imlilian/beszel/blob/main/supplemental/guides/systemd.md",
 											icons: [ExternalLinkIcon],
 										},
 									]}

@@ -22,11 +22,10 @@ msgstr ""
 msgid "(optional)"
 msgstr ""
 
-#. placeholder {0}: newVersion.v
 #: src/components/footer-repo-link.tsx
-msgctxt "New version available"
-msgid "{0} available"
-msgstr "{0} dostupno"
+#~ msgctxt "New version available"
+#~ msgid "{0} available"
+#~ msgstr "{0} dostupno"
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -1361,9 +1360,9 @@ msgstr "Sakrij token"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
-msgctxt "Button to copy install command"
-msgid "Homebrew command"
-msgstr "Homebrew naredba"
+#~ msgctxt "Button to copy install command"
+#~ msgid "Homebrew command"
+#~ msgstr "Homebrew naredba"
 
 #: src/components/add-system.tsx
 msgid "Host / IP"
@@ -2982,9 +2981,9 @@ msgstr ""
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
-msgctxt "Button to copy install command"
-msgid "Windows command"
-msgstr "Windows naredba"
+#~ msgctxt "Button to copy install command"
+#~ msgid "Windows command"
+#~ msgstr "Windows naredba"
 
 #. Disk write
 #. Disk write

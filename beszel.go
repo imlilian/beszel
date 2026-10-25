@@ -8,18 +8,24 @@ const (
 	// Version is the current version of the application.
 	//
 	// This tree is a fork that keeps merging upstream releases, so the version
-	// is "upstream base + build metadata": the part before `+` must stay equal
-	// to the upstream release it is based on (that is what a merge updates),
-	// and `beszelx.N` counts the fork's own feature rounds on top of it.
+	// reads "upstream base + fork round": the part before `-beszelx` must stay
+	// equal to the upstream release it is based on (a merge updates it), and
+	// `beszelx.N` counts the fork's own feature rounds on top of it.
 	//
-	// Build metadata is ignored by semver precedence, so every MinVersion*
-	// comparison, the agent<->hub handshake and the update check behave exactly
-	// as they do for the upstream release. Do not switch to a pre-release
-	// suffix (`0.22.0-beszelx.1`): it would sort above the base and make the
-	// next upstream patch release look like a downgrade.
-	Version = "0.21.1+beszelx.1"
+	// The `-` form is deliberate. Semver pre-release identifiers are also legal
+	// Docker tags, while build metadata (`0.21.1+beszelx.1`) is not, and the git
+	// tag has to be the same string as Version so that released artifacts,
+	// `ghupdate` and the install scripts all agree. Keep the tag as
+	// `v<Version>`.
+	Version = "0.21.1-beszelx.1"
 	// AppName is the name of the application.
 	AppName = "beszel"
+
+	// RepoOwner and RepoName point at this fork's repository. Self-update, the
+	// update check and the release links use them instead of upstream, so a
+	// fork never installs an upstream binary over itself.
+	RepoOwner = "imlilian"
+	RepoName  = "beszel"
 )
 
 // MinVersionCbor is the minimum supported version for CBOR compatibility.

@@ -242,7 +242,12 @@ func (info *UpdateInfo) getUpdate(e *core.RequestEvent) error {
 		return e.JSON(http.StatusOK, info)
 	}
 	info.lastCheck = time.Now()
-	latestRelease, err := ghupdate.FetchLatestRelease(context.Background(), http.DefaultClient, "")
+	// Check this fork's releases, not upstream's.
+	latestRelease, err := ghupdate.FetchLatestRelease(
+		context.Background(),
+		http.DefaultClient,
+		ghupdate.LatestReleaseURL(beszel.RepoOwner, beszel.RepoName),
+	)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/henrygd/beszel"
 	"github.com/henrygd/beszel/internal/ghupdate"
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,11 @@ func Update(cmd *cobra.Command, _ []string) {
 	}
 
 	updated, err := ghupdate.Update(ghupdate.Config{
+		// Always update from this fork, never from upstream: the fork's assets
+		// differ, and installing an upstream binary would silently drop every
+		// extension this tree adds.
+		Owner:             beszel.RepoOwner,
+		Repo:              beszel.RepoName,
 		ArchiveExecutable: "beszel",
 		DataDir:           dataDir,
 		UseMirror:         useMirror,

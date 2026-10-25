@@ -394,3 +394,10 @@ func getApiURL(useMirror bool, owner, repo string) string {
 	}
 	return fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
 }
+
+// LatestReleaseURL returns the GitHub API URL for a repository's latest
+// release, so callers that do not go through Update() (the hub's update check)
+// can still target their own repository instead of the default one.
+func LatestReleaseURL(owner, repo string) string {
+	return getApiURL(false, owner, repo)
+}

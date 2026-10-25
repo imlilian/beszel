@@ -16,7 +16,6 @@ import {
 	copyDockerCompose,
 	copyDockerRun,
 	copyLinuxCommand,
-	copyWindowsCommand,
 	type DropdownItem,
 	InstallDropdown,
 } from "@/components/install-dropdowns"
@@ -30,7 +29,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { AppleIcon, DockerIcon, FreeBsdIcon, TuxIcon, WindowsIcon } from "@/components/ui/icons"
+import { DockerIcon, FreeBsdIcon, TuxIcon } from "@/components/ui/icons"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -265,16 +264,9 @@ const ActionsButtonUniversalToken = memo(({ token, checked }: { token: string; c
 			onClick: () => copyLinuxCommand(port, publicKey, token),
 			icons: [TuxIcon],
 		},
-		{
-			text: t({ message: "Homebrew command", context: "Button to copy install command" }),
-			onClick: () => copyLinuxCommand(port, publicKey, token, true),
-			icons: [TuxIcon, AppleIcon],
-		},
-		{
-			text: t({ message: "Windows command", context: "Button to copy install command" }),
-			onClick: () => copyWindowsCommand(port, publicKey, token),
-			icons: [WindowsIcon],
-		},
+		// Homebrew and Windows are intentionally absent: this fork publishes neither a
+		// brew tap nor winget/scoop packages, and pointing them at upstream would
+		// install an agent without this fork's changes.
 		{
 			text: t({ message: "FreeBSD command", context: "Button to copy install command" }),
 			onClick: () => copyLinuxCommand(port, publicKey, token),
@@ -282,7 +274,7 @@ const ActionsButtonUniversalToken = memo(({ token, checked }: { token: string; c
 		},
 		{
 			text: t`Manual setup instructions`,
-			url: "https://beszel.dev/guide/agent-installation#binary",
+			url: "https://github.com/imlilian/beszel/blob/main/supplemental/guides/systemd.md",
 			icons: [ExternalLinkIcon],
 		},
 	]

@@ -22,11 +22,10 @@ msgstr ""
 msgid "(optional)"
 msgstr ""
 
-#. placeholder {0}: newVersion.v
 #: src/components/footer-repo-link.tsx
-msgctxt "New version available"
-msgid "{0} available"
-msgstr "{0} در دسترس است"
+#~ msgctxt "New version available"
+#~ msgid "{0} available"
+#~ msgstr "{0} در دسترس است"
 
 #. placeholder {0}: table.getFilteredSelectedRowModel().rows.length
 #. placeholder {1}: table.getFilteredRowModel().rows.length
@@ -1361,9 +1360,9 @@ msgstr "پنهان کردن توکن"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
-msgctxt "Button to copy install command"
-msgid "Homebrew command"
-msgstr "دستور Homebrew"
+#~ msgctxt "Button to copy install command"
+#~ msgid "Homebrew command"
+#~ msgstr "دستور Homebrew"
 
 #: src/components/add-system.tsx
 msgid "Host / IP"
@@ -2982,9 +2981,9 @@ msgstr "سیگنال Wi-Fi"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
-msgctxt "Button to copy install command"
-msgid "Windows command"
-msgstr "دستور Windows"
+#~ msgctxt "Button to copy install command"
+#~ msgid "Windows command"
+#~ msgstr "دستور Windows"
 
 #. Disk write
 #. Disk write

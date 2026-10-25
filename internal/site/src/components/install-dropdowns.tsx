@@ -1,31 +1,30 @@
-import { i18n } from "@lingui/core"
 import { memo } from "react"
 import { copyToClipboard, getHubURL } from "@/lib/utils"
 import { DropdownMenuContent, DropdownMenuItem } from "./ui/dropdown-menu"
 
-// const isbeta = beszel.hub_version.includes("beta")
-// const imagetag = isbeta ? ":edge" : ""
-
 /**
- * Get the URL of the script to install the agent.
- * @param path - The path to the script (e.g. "/brew").
- * @returns The URL for the script.
+ * Install commands shown in the "add system" dialog.
+ *
+ * This tree is a fork and publishes its own agent image and install scripts, so
+ * every command below points at the fork, never at upstream. Keep these in sync
+ * with what `.github/workflows/docker-images.yml` and `release.yml` publish:
+ *
+ *   image   → ghcr.io/<repo>/beszel-agent   (built on every `v*` tag, must be a
+ *                                          public package for pulls to work)
+ *   script  → raw.githubusercontent.com/<repo>/main/supplemental/scripts/...
+ *
+ * The same strings are duplicated inside the shell scripts (`BESZEL_REPO`), so
+ * a rename has to touch both places.
  */
-const getScriptUrl = (path: string = "") => {
-	return `https://get.beszel.dev${path}`
-	// no beta for now
-	// const url = new URL("https://get.beszel.dev")
-	// url.pathname = path
-	// if (isBeta) {
-	// 	url.searchParams.set("beta", "1")
-	// }
-	// return url.toString()
-}
+const FORK_REPO = "imlilian/beszel"
+const FORK_BRANCH = "main"
+const AGENT_IMAGE = `ghcr.io/${FORK_REPO}/beszel-agent`
+const AGENT_SCRIPT_URL = `https://raw.githubusercontent.com/${FORK_REPO}/${FORK_BRANCH}/supplemental/scripts/install-agent.sh`
 
 export function copyDockerCompose(port = "45876", publicKey: string, token: string) {
 	copyToClipboard(`services:
   beszel-agent:
-    image: henrygd/beszel-agent
+    image: ${AGENT_IMAGE}
     container_name: beszel-agent
     restart: unless-stopped
     network_mode: host
@@ -43,24 +42,17 @@ export function copyDockerCompose(port = "45876", publicKey: string, token: stri
 
 export function copyDockerRun(port = "45876", publicKey: string, token: string) {
 	copyToClipboard(
-		`docker run -d --name beszel-agent --network host --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock:ro -v beszel_agent_data:/var/lib/beszel-agent -e KEY="${publicKey}" -e LISTEN=${port} -e TOKEN="${token}" -e HUB_URL="${getHubURL()}" henrygd/beszel-agent`
+		`docker run -d --name beszel-agent --network host --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock:ro -v beszel_agent_data:/var/lib/beszel-agent -e KEY="${publicKey}" -e LISTEN=${port} -e TOKEN="${token}" -e HUB_URL="${getHubURL()}" ${AGENT_IMAGE}`
 	)
 }
 
-export function copyLinuxCommand(port = "45876", publicKey: string, token: string, brew = false) {
-	let cmd = `curl -sL ${getScriptUrl(
-		brew ? "/brew" : ""
-	)} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
-	// brew script does not support --china-mirrors
-	if (!brew && (i18n.locale + navigator.language).includes("zh-CN")) {
-		cmd += ` --china-mirrors`
-	}
-	copyToClipboard(cmd)
-}
-
-export function copyWindowsCommand(port = "45876", publicKey: string, token: string) {
+export function copyLinuxCommand(port = "45876", publicKey: string, token: string) {
+	// The script resolves the release from this fork (see BESZEL_REPO inside it),
+	// so the command only has to fetch and run it. `--mirror=<url>` is still
+	// available for networks that cannot reach GitHub, but there is no default
+	// mirror any more: upstream's gh.beszel.dev only mirrors upstream releases.
 	copyToClipboard(
-		`& iwr -useb ${getScriptUrl()} -OutFile "$env:TEMP\\install-agent.ps1"; & Powershell -ExecutionPolicy Bypass -File "$env:TEMP\\install-agent.ps1" -Key "${publicKey}" -Port ${port} -Token "${token}" -Url "${getHubURL()}"`
+		`curl -sL ${AGENT_SCRIPT_URL} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
 	)
 }
 
