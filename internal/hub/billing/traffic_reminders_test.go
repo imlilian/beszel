@@ -159,6 +159,29 @@ func TestTrafficRemindersOnlyNotifySubscribers(t *testing.T) {
 	require.Empty(t, f.runTraffic(t))
 }
 
+// TestTrafficRemindersSkipEndedPeriods covers the ledger of a system that
+// stopped reporting before the reset day: the stored period is over, usage is
+// stale, and the sampler has not rolled it over yet. Reminding from it would
+// claim an ended period is over quota.
+func TestTrafficRemindersSkipEndedPeriods(t *testing.T) {
+	f := newReminderFixture(t)
+	system := f.system(t, "web-01", []string{f.user.Id})
+	config := f.quotaConfig(t, system.Id, tebibyte, billing.TrafficModeSum)
+	ledger := f.ledger(t, system.Id, 1800*(1<<30), 0, time.Now().AddDate(0, 0, -3))
+	f.subscribeTraffic(t, system.Id, f.user.Id)
+
+	require.Empty(t, f.runTraffic(t))
+	require.Equal(t, billing.LevelNone, f.trafficLevelOf(t, config.Id))
+
+	// After the rollover the same system still receives its first band.
+	record, err := f.hub.FindRecordById("system_traffic", ledger.Id)
+	require.NoError(t, err)
+	record.Set("periodEnd", time.Now().AddDate(0, 0, 20))
+	record.Set("usedUpload", 900*(1<<30))
+	require.NoError(t, f.hub.Save(record))
+	require.Len(t, f.runTraffic(t), 1)
+}
+
 func TestTrafficRemindersRespectTrafficMode(t *testing.T) {
 	f := newReminderFixture(t)
 	system := f.system(t, "web-01", []string{f.user.Id})

@@ -161,6 +161,14 @@ func (bm *Manager) checkTraffic(cfgRecord, trafficRecord *core.Record, now time.
 		return nil
 	}
 	traffic := trafficFromRecord(trafficRecord)
+	// The sampler rolls the period over on its next sample, and until then the
+	// ledger still describes the *previous* period. Reminding from it would
+	// report ended-period numbers ("resets today", usage that no longer counts),
+	// so wait for the rollover instead. `PeriodEnd == 0` only happens for a
+	// record that never got a period, which cannot be reminded about either.
+	if traffic.PeriodEnd <= 0 || now.UnixMilli() >= traffic.PeriodEnd {
+		return nil
+	}
 	used := trafficUsed(cfg, traffic)
 	pct := float64(used) / float64(cfg.TrafficLimit) * 100
 	level := trafficLevel(pct)

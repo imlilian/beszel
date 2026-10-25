@@ -77,6 +77,11 @@ func (bm *Manager) AccumulateTraffic(txApp core.App, systemID string, stats *sys
 			start, end := Period(now, cfg.ResetDay, time.Local)
 			traffic.PeriodStart, traffic.PeriodEnd = start.UnixMilli(), end.UnixMilli()
 		}
+		if bm != nil && bm.app != nil {
+			// Once per period per system: cheap, and the fastest way to answer
+			// "why did the counters go back to zero".
+			bm.app.Logger().Info("Traffic counters reset", "system", systemID, "reason", reason)
+		}
 		traffic.UsedUpload, traffic.UsedDownload = 0, 0
 		traffic.LastResetAt = now.UnixMilli()
 		traffic.ResetReason = reason
