@@ -48,6 +48,9 @@ func NewHub(app core.App) *Hub {
 	hub.rm = records.NewRecordManager(hub)
 	hub.sm = systems.NewSystemManager(hub)
 	hub.bm = billing.NewManager(hub, hub.AlertManager, hub.MakeLink)
+	// The sampler feeds the billing traffic ledger; without this the hub would
+	// still store samples but never account usage.
+	hub.sm.SetTrafficAccumulator(hub.bm)
 	hub.hb = heartbeat.New(app, utils.GetEnv)
 	if hub.hb != nil {
 		hub.hbStop = make(chan struct{})

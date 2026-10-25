@@ -15,6 +15,7 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 type Currency string
@@ -136,6 +137,11 @@ func LoadTraffic(app core.App, systemID string) (*Traffic, error) {
 		}
 		return nil, err
 	}
+	return trafficFromRecord(record), nil
+}
+
+// trafficFromRecord is the typed view used by both the loader and the sampler.
+func trafficFromRecord(record *core.Record) *Traffic {
 	return &Traffic{
 		SystemId:     record.GetString("system"),
 		PeriodStart:  dateMillis(record, "periodStart"),
@@ -146,7 +152,7 @@ func LoadTraffic(app core.App, systemID string) (*Traffic, error) {
 		LastSampleAt: dateMillis(record, "lastSampleAt"),
 		LastResetAt:  dateMillis(record, "lastResetAt"),
 		ResetReason:  record.GetString("resetReason"),
-	}, nil
+	}
 }
 
 func configFromRecord(record *core.Record) *Config {
@@ -182,7 +188,16 @@ func dateMillis(record *core.Record, name string) int64 {
 // ParseCounters converts the stored `lastCounters` JSON
 // ({"eth0":[sentTotal,recvTotal]}) into typed counters. Unknown or malformed
 // entries are skipped instead of failing the whole sample.
+//
+// A record loaded from the database hands back types.JSONRaw rather than a
+// decoded map, so the JSON has to be decoded before the per-interface walk.
 func ParseCounters(raw any) map[string][2]uint64 {
+	switch value := raw.(type) {
+	case types.JSONRaw:
+		return parseCountersJSON(value)
+	case []byte:
+		return parseCountersJSON(value)
+	}
 	counters := make(map[string][2]uint64)
 	entries, ok := raw.(map[string]any)
 	if !ok {
@@ -196,6 +211,15 @@ func ParseCounters(raw any) map[string][2]uint64 {
 		counters[name] = [2]uint64{toUint64(pair[0]), toUint64(pair[1])}
 	}
 	return counters
+}
+
+/** Decodes the stored JSON blob before the typed walk. */
+func parseCountersJSON(raw []byte) map[string][2]uint64 {
+	var decoded map[string]any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		return make(map[string][2]uint64)
+	}
+	return ParseCounters(decoded)
 }
 
 func toUint64(value any) uint64 {

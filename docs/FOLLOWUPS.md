@@ -22,4 +22,6 @@
 - [ ] P7 — 去重状态 `remindLevel` 存在 `system_billing`（全局），多用户共享一个系统时"某用户后开开关"会错过已推进的档位。→ 需要严格按用户去重时，把已提醒档位写进该 `alerts` 记录的 `state` JSON（参考 `NetworkMonitorCert`）。
 - [x] P7 — 通知正文的语言：**确认与上游架构一致，不是缺陷，无需处理**。Beszel 的邮件/Webhook 正文一律由 Go 在投递前拼成字符串（`alerts_system.go` / `alerts_container.go` / `alerts_network_monitors.go` / `alerts_zfs.go` / `alerts_smart.go` / `alerts_systemd.go` 全是英文 `fmt.Sprintf`），经 `AlertManager.SendAlert` 交给 shoutrrr/SMTP；触发方是 Cron 或心跳入库，**整条链路没有前端参与**，Lingui 目录覆盖不到。前端负责的是展示层（`alertInfo` 的名称/单位/描述、告警历史表），那部分已经是多语言。`reminders.go::expiryMessage` 沿用同一模式。→ 若将来确实要发中文邮件，需在 Go 侧加按 `user_settings.settings.lang` 分发的消息表，并补上「切换语言时回写 `settings.lang`」（目前全仓没有任何代码写该字段，`api.ts:94` 只读不写）。
 - [ ] P7 — 到期提醒没做人工验收（改 `expiresAt` 为明天 + 把 Cron 临时改成 `* * * * *` 观察）。→ 需要真实 hub 实例；自动化覆盖见 `billing_reminders_test.go`。
-- [ ] P8（预判）— `AccumulateTraffic` 在事务内做 2 次额外查询（每系统每分钟）。个人规模无感，系统数 >100 时考虑加内存缓存。
+- [ ] P8 — 采样事务里多了 2 次查询（`system_billing` + `system_traffic`）和 1 次写，每系统每分钟一次。个人规模无感；系统数 >100 时考虑把 billing 配置放进内存缓存。
+- [ ] P8 — 只统计 `trafficLimit > 0` 的系统：先不限额、后设限额时，历史用量从设置那一刻起算（前端本来就只在有上限时渲染 `TrafficBar`，语义一致）。→ 若将来要"无限额也留历史"，把 `AccumulateTraffic` 的 `TrafficLimit <= 0` 提前返回去掉即可，代价是每个系统每分钟多一次写。
+- [ ] P8 — 依赖 Agent 上报 `Stats.NetworkInterfaces`（累计计数器）。0.13.0 之前的老 Agent 没有该字段，永远不累计；升级 Agent 后首个采样点只建基线。

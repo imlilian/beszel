@@ -279,6 +279,16 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 			return err
 		}
 
+		// Billing traffic is derived from this very sample, so it is written in
+		// the same transaction. A failure here must not cost us the monitoring
+		// data: log it and keep going. The ledger self-heals on the next sample,
+		// while a lost sample is gone for good.
+		if sys.manager.traffic != nil {
+			if err := sys.manager.traffic.AccumulateTraffic(txApp, sys.Id, &data.Stats, time.Now()); err != nil {
+				hub.Logger().Error("Failed to accumulate traffic", "system", sys.Id, "err", err)
+			}
+		}
+
 		// add containers and container_stats records
 		if len(data.Containers) > 0 {
 			if data.Containers[0].Id != "" {

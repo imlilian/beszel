@@ -3,7 +3,7 @@
 > **给接管的新 Agent**：先读本文件，再读 `docs/WORKPLAN-beszel-extensions.md` 的对应阶段，最后读 `docs/PRD-beszel-extensions.md` 的相关章节。
 > 本文件是「已经发生了什么」的唯一权威来源，**避免重做已完成的阶段**。
 >
-> 最后更新：2026-10-25（P7 完成时）
+> 最后更新：2026-10-25（P8 完成时）
 
 ## 1. 阶段状态
 
@@ -17,7 +17,7 @@
 | P5 计费数据模型 | ✅ 完成 | `b2e23cbb` | 2 个新集合 + 权限 + `hub/billing` 包 |
 | P6 计费前端 | ✅ 完成 | `dcce1b6f`→`stage-6b` | 数据层 + 纯函数 + 单测（`dcce1b6f`）；对话框 + 卡片/表格展示 + zh-CN（`stage-6b`，见 §4 偏差 20–22） |
 | P7 到期提醒 | ✅ 完成 | `stage-7` | `BillingExpiry` 告警类型 + 每日 Cron（见 §4 偏差 26–30） |
-| P8 流量后端 | ⬜ | — | — |
+| P8 流量后端 | ✅ 完成 | `stage-8` | `billing.Manager.AccumulateTraffic` + 周期滚动 / 手动重置；顺带修好 P5 遗留的 `ParseCounters`（见 §4 偏差 31–36） |
 | P9 流量前端 | ⬜ | — | — |
 | P10 可选 | ⬜ | — | 流量提醒 / 历史 / 连接数 |
 
@@ -58,6 +58,9 @@ git status --short            # 应无输出
 | `billing.BillingExpiryAlertName` | `internal/hub/billing/reminders.go` | `"BillingExpiry"`，与 `alertInfo.BillingExpiry`、迁移 `1793010002` 三处必须一致 |
 | `billing.NewManager(app, notifier, makeLink)` | 同上 | Hub 里 `hub.bm`；`Notifier` 接口只有 `SendAlert(alerts.AlertMessageData) error`，测试注入假实现 |
 | `billing.Manager.CheckExpiryReminders()` | 同上 | 每日 Cron 入口，返回 `errors.Join` 的聚合错误（Cron 里记日志，不 panic） |
+| `billing.Manager.AccumulateTraffic(txApp, systemID, stats, now)` | `internal/hub/billing/traffic.go` | 采样累计入口。`Stats.NetworkInterfaces[name][2]/[3]` 是 OS 累计计数器，逐网卡差分；`trafficLimit == 0` / 无 billing 记录 / 无网卡时直接返回 |
+| `billing.ResetReasonInit/Auto/Manual` | 同上 | 写进 `system_traffic.resetReason`，用于排查"为什么清零" |
+| `systems.TrafficAccumulator` / `SystemManager.SetTrafficAccumulator` | `internal/hub/systems/system_manager.go` | systems 包**不** import billing；hub 在 `NewHub` 里注入，nil 时采样路径整体跳过 |
 | `alerts.name` 枚举新增 `BillingExpiry` | 迁移 `1793010002` | 照抄 `1791926360` 的追加/回滚写法 |
 
 **订阅设置的正确姿势**（避免整表重渲染）：
@@ -98,6 +101,13 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 28. **P7：没有自己的 `alerts_history`，也不改 `alerts.value`**。`BillingExpiry` 是纯开关型（`noThreshold + noDuration`），阈值仍是 `system_billing.notifyDaysBefore`；`alerts_system.go::HandleSystemAlerts` 的 `default` 分支会因 `cpuStateAlertValue` 返回 `!ok` 而安全跳过未知名字，所以 `alerts` 包无需改动，也没有把 `BillingExpiry` 加进 `GetAlertsExcludingNames`。
 29. **P7：`alerts` 有 `(user, system, name)` 唯一索引**（`idx_MnhEt21L5r`）。测试里不要重复创建同名告警，否则 `Save` 直接失败；`DeleteUserAlerts` 是"关开关"的正路。
 30. **P7：Cron 时间是 UTC 00:30（`30 0 * * *`）**。PocketBase Cron 走服务器本地时区，部署时设 `TZ` 才会按期望的本地零点跑。消息文案是英文——与 `alerts_*.go` 的既有做法一致（通知正文一律在 Go 侧投递前拼装，前端 Lingui 只覆盖展示层），**不是遗漏**，别再去后端加 i18n。
+
+31. **P8：P5 的 `ParseCounters` 对真实记录一直是失效的（已修）**。`record.Get("lastCounters")` 返回的是 `types.JSONRaw`（`[]byte`），不是 `map[string]any`，旧实现类型断言失败后静默返回空 map → 差分永远为 0、`usedUpload` 永远不涨。P5 阶段没暴露是因为前端走 REST API 读，只有 Go 侧 `LoadTraffic` 受影响。修法：`ParseCounters` 增加 `types.JSONRaw` / `[]byte` 分支先 `json.Unmarshal` 再走原有逻辑。**教训**：涉及 JSONField 的读取必须用真实记录跑一遍，别只测 `map[string]any` 入参。
+32. **P8：流量累计的写入用 `SaveNoValidate`**。这是每系统每分钟一次的热路径，且 `system` 关系在 `billing.Load` 时已确认存在；用 `Save` 会额外跑一遍校验与唯一索引检查。
+33. **P8：`systems` 包不 import `billing`**。改成 `TrafficAccumulator` 接口 + `SetTrafficAccumulator`，`hub.NewHub` 在 `billing.NewManager` 之后、`sm.Initialize()` 之前注入（此时还没有系统 goroutine，所以不需要锁）。测试里 `traffic` 为 nil 的旧用例全部不受影响。
+34. **P8：手动重置保留周期边界，且自动滚动优先**。PRD §5.3 伪代码里手动重置会重算周期，WORKPLAN 改成了"只清量、不动边界"（否则用户按一次重置就白送一天额度）；两者同时到期时按 auto 走，因为边界本来就要换。
+35. **P8：累计失败绝不影响 `system_stats`**。在事务内 `Log.Error` 后继续，不 return err —— 监控数据是核心资产，流量账本下一分钟能自愈。
+36. **P8：`trafficLimit == 0` 的系统完全不建 `system_traffic` 记录**。省掉每分钟的读写；代价是"先不限额、后设限额"时从设置那一刻开始计（前端 `TrafficBar` 本来就只在 `trafficLimit > 0` 时渲染，语义一致）。
 
 ## 4.1 P6（计费前端）开工必读
 

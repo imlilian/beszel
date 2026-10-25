@@ -57,6 +57,14 @@ type SystemManager struct {
 	realtimeWorkerRun   bool                                  // Whether a realtime worker has been started
 	ctx                 context.Context                       // Cancelled when the app terminates
 	cancel              context.CancelFunc                    // Cancels ctx and all child system contexts
+	traffic             TrafficAccumulator                    // Optional billing hook, nil when billing is disabled
+}
+
+// TrafficAccumulator records per-period traffic usage from a sample.
+// Implemented by *billing.Manager; extracted as an interface so this package
+// does not depend on the billing package (and so tests can omit it).
+type TrafficAccumulator interface {
+	AccumulateTraffic(txApp core.App, systemID string, stats *system.Stats, now time.Time) error
 }
 
 // hubLike defines the interface requirements for the hub dependency.
@@ -84,6 +92,13 @@ func NewSystemManager(hub hubLike) *SystemManager {
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	return sm
+}
+
+// SetTrafficAccumulator wires the billing traffic ledger into the sampler.
+// The hub calls this once, right after creating both managers and before
+// Initialize starts any system goroutine, so no locking is needed.
+func (sm *SystemManager) SetTrafficAccumulator(accumulator TrafficAccumulator) {
+	sm.traffic = accumulator
 }
 
 // GetSystem returns a system by ID from the store

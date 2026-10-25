@@ -1384,6 +1384,14 @@ PRD §11「流量」中「造 500MB」「停 Hub 2 小时」「重启机器」�
 - **时间字段比较**：`traffic.PeriodEnd` 从 DB 读出来是 `types.DateTime`，与 `time.Time` 比较要统一用 `Time()`。
 - **`system.Stats` 结构变化**：`NetworkInterfaces` 可能为 nil（Agent 未上报）→ 要判空，直接 `return nil`（不建立基线）。
 
+### 实际实现与本文的差异（2026-10-25）
+
+- `AccumulateTraffic` 落在 `internal/hub/billing/traffic.go`，但**没有**把 `billing *billing.Manager` 塞进 `SystemManager`。改成 `systems.TrafficAccumulator` 接口 + `SetTrafficAccumulator`，`hub.NewHub` 注入 —— `systems` 包不 import `billing`，测试里不注入时整条路径自然跳过。
+- **先修了 `ParseCounters` 才能跑通**：`record.Get("lastCounters")` 返回 `types.JSONRaw`（`[]byte`）而不是 `map[string]any`，P5 的实现会静默返回空 map，差分恒为 0。已在 `ParseCounters` 里加 JSONRaw / `[]byte` 分支（见 PROGRESS 偏差 31）。
+- 手动重置**保留周期边界**（PRD §5.3 伪代码是重算），且自动滚动优先于手动重置（PROGRESS 偏差 34）。
+- 写入用 `SaveNoValidate`；累计失败只 `Log.Error` 不 return（偏差 32、35）。
+- 测试拆两份：`billing/traffic_test.go`（真实 DB 驱动采样器，7 个场景）与 `billing/traffic_pure_test.go`（`safeDelta` / `resetReason`），另有 `systems/system_traffic_test.go` 验证 `createRecords` 的接线。
+
 ### 提交
 
 ```
