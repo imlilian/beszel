@@ -17,9 +17,25 @@ import { DropdownMenuContent, DropdownMenuItem } from "./ui/dropdown-menu"
  * a rename has to touch both places.
  */
 const FORK_REPO = "imlilian/beszel"
-const FORK_BRANCH = "main"
 const AGENT_IMAGE = `ghcr.io/${FORK_REPO}/beszel-agent`
-const AGENT_SCRIPT_URL = `https://raw.githubusercontent.com/${FORK_REPO}/${FORK_BRANCH}/supplemental/scripts/install-agent.sh`
+
+/**
+ * Install scripts are read from the release tag this hub was built from
+ * (`v<Version>`, see beszel.go), not from a branch. Tags are immutable, so the
+ * command always hands out the script that belongs to this release instead of
+ * whatever the working branch happens to contain today — a branch-based URL
+ * would serve the upstream script (and install an upstream agent) whenever the
+ * release branch differs from the one named here.
+ *
+ * Resolved lazily: `globalThis.BESZEL` is injected into index.html at serve
+ * time. The `main` fallback only happens in a local dev build, where the tag
+ * does not exist yet.
+ */
+function agentScriptUrl(): string {
+	const version = globalThis.BESZEL?.HUB_VERSION
+	const ref = version ? `v${version}` : "main"
+	return `https://raw.githubusercontent.com/${FORK_REPO}/${ref}/supplemental/scripts/install-agent.sh`
+}
 
 export function copyDockerCompose(port = "45876", publicKey: string, token: string) {
 	copyToClipboard(`services:
@@ -52,7 +68,7 @@ export function copyLinuxCommand(port = "45876", publicKey: string, token: strin
 	// available for networks that cannot reach GitHub, but there is no default
 	// mirror any more: upstream's gh.beszel.dev only mirrors upstream releases.
 	copyToClipboard(
-		`curl -sL ${AGENT_SCRIPT_URL} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
+		`curl -sL ${agentScriptUrl()} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
 	)
 }
 

@@ -141,7 +141,7 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 53. **重置日志**：`AccumulateTraffic` 的 reset 分支补 `Logger().Info("Traffic counters reset", "reason", …)`（每系统每周期一次），落实 PRD §10「流量重置要记日志」；此前只有异常差值的 `Warn`。
 
 54. **fork 身份集中到 `beszel.RepoOwner/RepoName`**（`imlilian/beszel`）。`hub/update.go`（`beszel update` 自更新）与 `hub/api.go`（更新检查，新增 `ghupdate.LatestReleaseURL(owner, repo)`）都指向它，永远不会拉上游二进制。**界面上的「新版本可用」角标已删除**（`footer-repo-link.tsx`，文件头注释写明原因）：fork 版本带 `-beszelx.N`，自动升级提示只会误导。页脚 GitHub / Release 链接也改为指向 fork。
-55. **安装命令与脚本全部指向 fork**。`install-dropdowns.tsx` 顶部集中 `FORK_REPO` / `AGENT_IMAGE`（`ghcr.io/imlilian/beszel/beszel-agent`，与 `docker-images.yml` 的 `ghcr.io/${{ github.repository }}/<image>` 一致）/ `AGENT_SCRIPT_URL`（raw.githubusercontent 的 `main` 分支）。`install-agent.sh`、`install-hub.sh` 顶部加 `BESZEL_REPO` 变量并替换所有下载 URL；**删掉 `get.beszel.dev/latest-version`**，版本改由 `api.github.com/repos/$BESZEL_REPO/releases/latest` 解析；`--mirror` 不再有默认值（上游 `gh.beszel.dev` 只镜像上游资产），必须传 `--mirror=<url>`。
+55. **安装命令与脚本全部指向 fork**。`install-dropdowns.tsx` 顶部集中 `FORK_REPO` / `AGENT_IMAGE`（`ghcr.io/imlilian/beszel/beszel-agent`，与 `docker-images.yml` 的 `ghcr.io/${{ github.repository }}/<image>` 一致）/ `agentScriptUrl()`（`raw.githubusercontent.com/imlilian/beszel/v<Version>/...`，**跟随发布 tag 而非分支**：branch URL 会在发布分支与它不一致时悄悄下发上游脚本）。`install-agent.sh`、`install-hub.sh` 顶部加 `BESZEL_REPO` 变量并替换所有下载 URL；**删掉 `get.beszel.dev/latest-version`**，版本改由 `api.github.com/repos/$BESZEL_REPO/releases/latest` 解析；`--mirror` 不再有默认值（上游 `gh.beszel.dev` 只镜像上游资产），必须传 `--mirror=<url>`。
 56. **Windows 与 Homebrew 入口隐藏**（`add-system.tsx`、`tokens-fingerprints.tsx`）：fork 不发布 winget/scoop/brew 包，原命令装到的是上游 agent。`install-agent.ps1`、`install-agent-brew.sh` 保留（便于合并上游），文件头已注明"本 fork 未发布"。将来要恢复：给 ps1 加"直接下载 release zip"分支 / 建一个 brew tap。
 57. **发版配置修正（`-beszelx.N` 是 pre-release 引发的连锁反应）**：`.goreleaser.yml` 改 `draft: false`（草稿资产下载需登录，安装脚本会 404）+ **`prerelease: false`**（否则 `releases/latest` 直接跳过该版本）；`docker-images.yml` 显式加 `type=raw,value=latest`（pre-release tag 不会自动产出 `latest`，而 UI 命令拉的是无 tag 镜像）；`helm-charts.yml` 在 fork 上跳过（`ghcr.io/henrygd/beszel-charts` 无写权限）。
 
@@ -150,7 +150,7 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 1. `beszel.go::Version` 与 tag 必须完全一致：`Version = "0.21.1-beszelx.1"` → `git tag v0.21.1-beszelx.1`。
 2. `git push origin v0.21.1-beszelx.1` → `release.yml` 产出 tar.gz / zip / deb / checksums 并**直接发布**；`docker-images.yml` 推 `ghcr.io/imlilian/beszel/{beszel,beszel-agent,…}`（含 `latest`）。
 3. 首次发版后把 GHCR package 设为 **public**，否则 UI 里的 `docker pull` 会 401。
-4. 验证三件事：`api.github.com/repos/imlilian/beszel/releases/latest` 返回该 tag；`raw.githubusercontent.com/imlilian/beszel/main/supplemental/scripts/install-agent.sh` 可访问；`docker pull ghcr.io/imlilian/beszel/beszel-agent` 成功。
+4. 验证三件事：`api.github.com/repos/imlilian/beszel/releases/latest` 返回该 tag；`raw.githubusercontent.com/imlilian/beszel/v<Version>/supplemental/scripts/install-agent.sh` 可访问（脚本 URL 由运行中的 hub 按自身版本拼出）；`docker pull ghcr.io/imlilian/beszel/beszel-agent` 成功。
 5. 下一轮 fork 功能：`beszelx.N` +1；合并上游后把 `-beszelx` 前面换成新的上游版本（`beszel_test.go` 会拦住忘记改的情况）。
 
 ## 4.1 P6（计费前端）开工必读
