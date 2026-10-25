@@ -153,6 +153,10 @@ const s = useStore($userSettings, { keys: ["monitorWarnMs", "monitorCritMs"] })
 4. 验证三件事：`api.github.com/repos/imlilian/beszel/releases/latest` 返回该 tag；`raw.githubusercontent.com/imlilian/beszel/v<Version>/supplemental/scripts/install-agent.sh` 可访问（脚本 URL 由运行中的 hub 按自身版本拼出）；`docker pull ghcr.io/imlilian/beszel/beszel-agent` 成功。
 5. 下一轮 fork 功能：`beszelx.N` +1；合并上游后把 `-beszelx` 前面换成新的上游版本（`beszel_test.go` 会拦住忘记改的情况）。
 
+58. **`npm run build` 不再跑 `lingui extract`**（提交 `package.json`）。原因：CI 用 `bun.lock`（`@lingui/cli` **5.4.1**），本地用 `package-lock.json`（**5.9.5**），两个版本 extract 出来的 `.po` 格式不同 —— CI 的 `Build site` 步骤一跑就把 **34 个 `.po` 全改写**，goreleaser 随即以 `git is in a dirty state` 退出（这是首次 release 失败的第二层原因，第一层见偏差 49 的平台矩阵）。
+    **约定**：新增/修改界面文案后仍然要 `npm run sync` 并把 `.po` 一起提交；`build` 只负责 `compile`（缺条目时运行时回退到 msgid，不会报错，所以**没有 CI 兜底**）。
+    验证方式：用 `npx bun install --no-save --cwd ./internal/site` 装上 CI 同款 5.4.1，新 `build` 后工作区干净；单独跑 `sync_no_compile` 则正好 34 个 `.po` 变脏。
+
 ## 4.1 P6（计费前端）开工必读
 
 计划见 WORKPLAN「阶段 P6」，以下是计划里没写、但会直接踩到的点：

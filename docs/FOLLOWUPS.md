@@ -37,4 +37,5 @@
 - [ ] 版本 — **GHCR package 默认是 private**：首次发版后要到 GitHub → Packages 把 `beszel` / `beszel-agent` 等设为 public，否则「添加系统」里的 `docker pull ghcr.io/imlilian/beszel/beszel-agent` 会 401。
 - [ ] 版本 — tag 与 `beszel.go::Version` 的一致性靠人保证（CI 未校验）。→ 可在 `release.yml` 加一步：把 `v${Version}` 与 `github.ref_name` 比对，不一致直接失败。
 - [ ] 发行 — Windows（winget/scoop）与 Homebrew 安装入口已隐藏（fork 没有这些分发渠道）。→ 要恢复：给 `install-agent.ps1` 加「直接下载 release zip」分支；brew 需要单独建一个 tap。
+- [ ] 发行 — **两个锁文件版本漂移**：`internal/site/bun.lock` 把 `@lingui/*` 锁在 5.4.1，`package-lock.json` 是 5.9.5。虽然 `build` 已不再 extract（不会弄脏工作区），但本地 `npm run sync` 生成的 `.po` 与 CI 的 5.4.1 输出会互相改写。→ 想彻底统一：只用 bun（`bun install` 重新生成 bun.lock 并提交，删掉 package-lock.json 的使用习惯），或在 CLAUDE/PROGRESS 里明确"生成 `.po` 必须用 bun"。
 - [ ] 版本 — 合并上游后忘记改版本号前半段。→ 合并 checklist 第一步就是 `beszel.go::Version` 的 `+` 前部分对齐新的上游基线；`beszel_test.go` 只能保证格式，不能保证对齐。
